@@ -22,7 +22,7 @@ gguf>=0.1.0  # For BitNet models
 
 # Integrations
 slack-sdk>=3.23.0
-python-linear>=1.0.0
+# python-linear>=1.0.0
 PyGithub>=2.1.0
 pydantic>=2.0.0
 
