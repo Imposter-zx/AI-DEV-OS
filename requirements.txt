@@ -15,7 +15,7 @@ httpx>=0.24.0
 torch>=2.0.0
 transformers>=4.36.0
 unsloth @ git+https://github.com/unslothai/unsloth.git
-newton-sim>=0.2.0  # Physics simulation (will be mocked if not available)
+# newton-sim>=0.2.0  # Physics simulation (will be mocked if not available)
 
 # Inference
 gguf>=0.1.0  # For BitNet models
