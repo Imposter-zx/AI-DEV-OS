@@ -11,6 +11,54 @@ AI Dev OS is a unified platform for autonomous AI agent development, combining:
 - **BitNet** - Efficient 1-bit LLM inference
 - **Claude HUD** - Real-time observability
 
+### Unified Platform Architecture
+
+The following diagram illustrates the integrated flow of the six core technologies within AI Dev OS, as defined in the official platform design:
+
+![Architecture Overview](file:///C:/Users/HASSA/.gemini/antigravity/brain/939dc489-ea81-40ea-847a-3133f7b9fe6b/architecture_overview.png)
+
+```mermaid
+graph TD
+    Start((brainstorm)) -->|refinement| B[Superpowers Skill:<br/>Brainstorming + Design]
+    B -->|dispatch| C{Approved Spec +<br/>Implementation Plan}
+    C --> D[Subagent Orchestration:<br/>LangGraph + Middleware]
+    
+    D -->|spawn Agent C| E[Sim Agent in Sandbox]
+    D -->|spawn Agent B| F[Training Agent in Sandbox]
+    D -->|spawn Agent A| G[Code Agent in Sandbox]
+    
+    E -->|Newton| H[Newton Engine]
+    F -->|Unsloth| I[Unsloth Framework]
+    
+    H --> J[Physics Simulation:<br/>GPU-accelerated]
+    I --> K[Model Training:<br/>2x faster, 70% less VRAM]
+    
+    J -->|results| L[BitNet.cpp:<br/>1-bit inference]
+    K -->|checkpoint| L
+    
+    G -->|read/write/test| M[Isolated Cloud Sandbox:<br/>Modal/Daytona]
+    L -->|test code| M
+    
+    G -->|code ready| N[Superpowers Skills:<br/>TDD + Code Review]
+    N -->|verified| O[Merge & Deploy:<br/>Auto-PR + GitHub]
+    O --> Production[[Live Result:<br/>Agent output running]]
+    
+    J -->|metrics| P[Claude HUD:<br/>Status + Context + Tools]
+    K -->|loss curves| P
+    L -->|real-time data| P
+    M -->|logs| P
+    P --> Feedback((Developer sees:<br/>What's running RIGHT NOW))
+    
+    style B fill:#d4edda,stroke:#28a745
+    style C fill:#d4edda,stroke:#28a745
+    style L fill:#fff3cd,stroke:#ffc107
+    style P fill:#ffe5d9,stroke:#ff7043
+    style J fill:#d1ecf1,stroke:#0c5460
+    style K fill:#d1ecf1,stroke:#0c5460
+    style M fill:#d1ecf1,stroke:#0c5460
+    style Production fill:#007bff,color:#fff
+```
+
 ## System Architecture
 
 ```
