@@ -1,0 +1,28 @@
+# Environments
+venv/
+env/
+.env
+.venv
+__pycache__/
+*.py[cod]
+
+# Logs
+logs/
+*.log
+
+# Models & Media
+*.gguf
+*.safetensors
+*.ckpt
+*.bin
+mnt/
+
+# Mac OS
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# AI Dev OS State
+.ai-dev-os/
