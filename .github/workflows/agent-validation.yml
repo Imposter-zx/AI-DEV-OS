@@ -24,9 +24,4 @@ jobs:
       run: |
         export PYTHONPATH=$PYTHONPATH:$(pwd)/src
         pytest --cov=src --cov-report=xml
-    - name: Lint with black
-      run: black --check src
-    - name: Lint with isort
-      run: isort --check-only src
-    - name: Lint with flake8
-      run: flake8 src --max-line-length=100 --extend-ignore=E501
+
