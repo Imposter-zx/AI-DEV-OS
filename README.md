@@ -404,7 +404,7 @@ Built on the shoulders of giants:
 - [Deep Agents](https://docs.anthropic.com/en/docs/build-with-claude/agents) - Agent framework
 - [Superpowers](https://github.com/obra/superpowers) - Workflow skills
 - [Claude HUD](https://github.com/jarrodwatts/claude-hud) - Terminal observability
-- [Newton](https://github.com/NVIDIA-Omniverse/physics) - Physics simulation
+- [Newton](https://github.com/newton-physics/newton) - Physics simulation
 - [Unsloth](https://github.com/unslothai/unsloth) - Fast LLM training
 - [BitNet](https://github.com/microsoft/BitNet) - Efficient inference
 
