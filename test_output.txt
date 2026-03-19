@@ -1,0 +1,40 @@
+============================= test session starts =============================
+platform win32 -- Python 3.6.8, pytest-7.0.1, pluggy-1.0.0 -- C:\Program Files\Python36\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\HASSA\Desktop\AI-DEV-OS, configfile: pytest.ini, testpaths: tests
+plugins: anyio-3.6.2, asyncio-0.16.0, mock-3.6.1
+collecting ... collected 7 items / 2 errors / 5 selected
+
+=================================== ERRORS ====================================
+_____________________ ERROR collecting tests/test_core.py _____________________
+ImportError while importing test module 'C:\Users\HASSA\Desktop\AI-DEV-OS\tests\test_core.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python36\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_core.py:3: in <module>
+    from ai_dev_os.core import AIDevOSOrchestrator, WorkflowState, WorkflowPhase, AgentConfig, SandboxProvider
+src\ai_dev_os\core.py:16: in <module>
+    from langgraph.graph import StateGraph, START, END
+E   ModuleNotFoundError: No module named 'langgraph'
+_________________ ERROR collecting tests/test_integrations.py _________________
+ImportError while importing test module 'C:\Users\HASSA\Desktop\AI-DEV-OS\tests\test_integrations.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+C:\Program Files\Python36\lib\importlib\__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+tests\test_integrations.py:2: in <module>
+    from unittest.mock import AsyncMock, MagicMock
+E   ImportError: cannot import name 'AsyncMock'
+============================== warnings summary ===============================
+..\..\AppData\Roaming\Python\Python36\site-packages\_pytest\config\__init__.py:1249
+  C:\Users\HASSA\AppData\Roaming\Python\Python36\site-packages\_pytest\config\__init__.py:1249: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_core.py
+ERROR tests/test_integrations.py
+!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
+======================== 1 warning, 2 errors in 0.10s =========================

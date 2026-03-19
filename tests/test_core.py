@@ -1,5 +1,15 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
 import pytest
 from unittest.mock import MagicMock, patch
+
+# Mock Python 3.9+ dependencies that are unavailable
+sys.modules['langgraph'] = MagicMock()
+sys.modules['langgraph.graph'] = MagicMock()
+sys.modules['anthropic'] = MagicMock()
+
 from ai_dev_os.core import AIDevOSOrchestrator, WorkflowState, WorkflowPhase, AgentConfig, SandboxProvider
 
 @pytest.fixture

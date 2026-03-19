@@ -1,5 +1,19 @@
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
+
+try:
+    from unittest.mock import AsyncMock
+except ImportError:
+    class AsyncMock(MagicMock):
+        async def __call__(self, *args, **kwargs):
+            return super(AsyncMock, self).__call__(*args, **kwargs)
+
+# Mock HTTPX
+sys.modules['httpx'] = MagicMock()
 
 # We will test the basic webhook classes that handle standard JSON requests
 

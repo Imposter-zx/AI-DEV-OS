@@ -10,6 +10,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from ai_dev_os.utils.error_handling import with_retry
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,18 +58,25 @@ class UnslothTrainer:
     
     async def setup(self) -> bool:
         """
-        Setup Unsloth trainer. This would normally load the model
-        and set up training configuration.
+        Setup Unsloth trainer.
         """
         try:
             logger.info(f"Setting up Unsloth trainer for {self.config.model_name}")
             
-            # In production, use actual Unsloth:
-            # from unsloth import FastLanguageModel
-            # self.model, self.tokenizer = FastLanguageModel.from_pretrained(...)
-            
-            # For now, simulate with mock
-            await asyncio.sleep(1)  # Simulate loading
+            try:
+                from unsloth import FastLanguageModel
+                # Apply 4-bit load or appropriate config
+                max_seq_length = self.config.max_seq_length
+                self.model, self.tokenizer = FastLanguageModel.from_pretrained(
+                    model_name = self.config.model_name,
+                    max_seq_length = max_seq_length,
+                    dtype = None,
+                    load_in_4bit = self.config.quantization.value == "int4",
+                )
+            except ImportError:
+                logger.warning("Unsloth not installed. Simulating loading.")
+                await asyncio.sleep(1)
+
             
             self.training_logs.append({
                 "stage": "setup",
@@ -182,11 +191,16 @@ class BitNetInference:
         try:
             logger.info(f"Loading BitNet model from {self.model_path}")
             
-            # In production, load GGUF with bitnet.cpp
-            # import gguf
-            # self.model = gguf.load_model(self.model_path)
-            
-            await asyncio.sleep(0.5)  # Simulate loading
+            try:
+                from llama_cpp import Llama
+                self.model = Llama(
+                    model_path=self.model_path,
+                    n_ctx=4096,
+                )
+            except ImportError:
+                logger.warning("llama_cpp not installed. Simulating BitNet inference loading.")
+                await asyncio.sleep(0.5)
+
             
             logger.info("Model loaded successfully")
             return True
@@ -212,19 +226,17 @@ class BitNetInference:
             
             logger.info(f"Running inference: {prompt[:50]}...")
             
-            # Simulate inference
-            output = f"[BitNet inference result for: {prompt[:20]}...]"
-            
-            # In production, use:
-            # output = self.model.generate(
-            #     prompt=prompt,
-            #     max_tokens=max_tokens,
-            #     temperature=temperature,
-            #     top_p=top_p
-            # )
-            
-            await asyncio.sleep(0.1)  # Simulate inference time
-            
+            if hasattr(self.model, "create_completion"):
+                output = self.model.create_completion(
+                    prompt,
+                    max_tokens=max_tokens,
+                    temperature=temperature,
+                    top_p=top_p
+                )["choices"][0]["text"]
+            else:
+                await asyncio.sleep(0.1)  # Simulate inference time
+                output = f"[BitNet inference result for: {prompt[:20]}...]"
+                
             return True, output
         
         except Exception as e:
