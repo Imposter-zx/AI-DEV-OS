@@ -8,9 +8,10 @@ def setup_structured_logging():
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
     
-    # Avoid duplicate handlers
-    if not logger.handlers:
-        logHandler = logging.StreamHandler()
+    # Check if we already have a JSON-like formatter
+    has_json_formatter = any("Json" in type(h.formatter).__name__ for h in logger.handlers)
+    
+    if not has_json_formatter:
         try:
             try:
                 from pythonjsonlogger.json import JsonFormatter
@@ -19,10 +20,15 @@ def setup_structured_logging():
                 JsonFormatter = jsonlogger.JsonFormatter
             
             formatter = JsonFormatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+            logHandler = logging.StreamHandler()
+            logHandler.setFormatter(formatter)
+            logger.addHandler(logHandler)
         except ImportError:
-            formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-        
-        logHandler.setFormatter(formatter)
-        logger.addHandler(logHandler)
+            # Only add standard formatter if no handlers exist at all
+            if not logger.handlers:
+                formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
+                logHandler = logging.StreamHandler()
+                logHandler.setFormatter(formatter)
+                logger.addHandler(logHandler)
         
     return logger
