@@ -22,7 +22,7 @@ jobs:
         pip install pytest pytest-asyncio pytest-cov black isort mypy flake8
     - name: Run tests with coverage
       run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/src
         pytest --cov=src --cov-report=xml
     - name: Lint with black
       run: black --check src
