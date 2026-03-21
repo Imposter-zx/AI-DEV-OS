@@ -57,14 +57,12 @@ Developer Request (Slack/Linear/CLI)
 ```bash
 git clone https://github.com/Imposter-zx/ai-dev-os.git
 cd ai-dev-os
-python -m venv venv
-source venv/bin/activate  # or `venv\Scripts\activate` on Windows
 ```
 
-#### 2. Install Dependencies
+#### 2. Install Dependencies (Powered by `uv`)
 ```bash
-pip install -r requirements.txt
-pip install -r requirements-dev.txt  # For development
+# We use uv for lightning-fast dependency management
+uv sync --all-groups
 ```
 
 #### 3. Initialize Sandboxes (Modal, Daytona, or Runloop)
@@ -345,41 +343,37 @@ tail -f ~/.ai-dev-os/logs/training.log
 
 ### Dashboard (Optional)
 ```bash
-python -m ai_dev_os dashboard
-# Opens web UI at http://localhost:8000
-# Shows: running agents, context usage, completed tasks, PR history
+uv run streamlit run app/dashboard.py
+# Opens web UI at http://localhost:8501
+# Features: Multi-user Auth, running agents, context usage, completed tasks, PR history
 ```
 
 ## 🧪 Testing
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run with coverage
-pytest --cov=src
+uv run pytest --cov=src
 
 # Run specific test
-pytest tests/test_agents.py::test_brainstorming_skill
-
-# Run integration tests (requires Modal/Docker)
-pytest -m integration
+uv run pytest tests/test_core_comprehensive.py
 ```
 
 ## 🚦 Status
 
-- ✅ Deep Agents orchestration
-- ✅ Superpowers skill loading
-- ✅ Modal sandbox integration
-- ✅ Slack/Linear invocation
-- ✅ Claude HUD integration
-- ✅ Unsloth training wrapper
-- ✅ BitNet inference
-- ✅ Newton simulation
-- 🟡 GitHub OAuth flow
-- 🟡 Web dashboard
-- 🔜 Daytona sandbox support
-- 🔜 Runloop sandbox support
+- ✅ **Deep Agents orchestration**
+- ✅ **Superpowers caching & workflow enforcement**
+- ✅ **Unsloth training implementation** (Real fine-tuning)
+- ✅ **BitNet inference** (Real CPU-optimized inference)
+- ✅ **Web Dashboard** (Streamlit with multi-user Authentication)
+- ✅ **Prometheus Monitoring**
+- ✅ **GitHub OAuth flow & PR automation**
+- ✅ **Slack/Linear invocation** with strict secret validation
+- ✅ **Newton physics simulation**
+- ✅ **Modern CI/CD** (`uv` based deterministic builds + Security gating with Bandit)
+- 🔜 Daytona & Runloop sandbox support
 - 🔜 Multi-GPU training optimization
 
 ## 🤝 Contributing
