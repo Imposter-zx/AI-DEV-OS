@@ -27,6 +27,38 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+import os
+
+# ─── Authentication ────────────────────────────────────────────────
+
+def check_password():
+    """Returns True if the user had the correct password."""
+
+    def password_entered():
+        """Checks whether a password entered by the user is correct."""
+        if st.session_state["password"] == os.environ.get("DASHBOARD_PASSWORD", "aidevos"):
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # don't store password
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        st.text_input("Username", key="username")
+        st.text_input("Password", type="password", key="password")
+        st.button("Login", on_click=password_entered)
+        return False
+    elif not st.session_state["password_correct"]:
+        st.text_input("Username", key="username")
+        st.text_input("Password", type="password", key="password")
+        st.button("Login", on_click=password_entered)
+        st.error("😕 Password incorrect")
+        return False
+    else:
+        return True
+
+if not check_password():
+    st.stop()  # Do not continue if check_password is not True.
+
 # ─── Helpers ─────────────────────────────────────────────────────
 
 WORKFLOWS_DIR = Path.home() / ".ai-dev-os"

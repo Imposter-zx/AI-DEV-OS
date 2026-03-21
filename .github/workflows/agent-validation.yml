@@ -21,7 +21,9 @@ jobs:
     - name: Install dependencies
       run: uv sync --all-groups
 
-    - name: Run tests with coverage
+    - name: Run Tests
+      env:
+        ANTHROPIC_API_KEY: "dummy_key_for_ci_tests"
       run: |
         export PYTHONPATH=$PYTHONPATH:$(pwd)/src
         uv run pytest --cov=src --cov-report=xml

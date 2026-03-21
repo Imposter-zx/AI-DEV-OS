@@ -10,6 +10,8 @@ class LinearIntegration:
     """
     
     def __init__(self, webhook_secret: str):
+        if not webhook_secret or webhook_secret.strip() == "":
+            raise ValueError("CRITICAL SECURITY ERROR: Linear webhook secret is missing or empty.")
         self.webhook_secret = webhook_secret
         self.api_url = "https://api.linear.app/graphql"
         

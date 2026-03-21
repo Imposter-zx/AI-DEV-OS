@@ -30,6 +30,8 @@ class GitHubIntegration:
     """
 
     def __init__(self, token: str):
+        if not token or token.strip() == "":
+            raise ValueError("CRITICAL SECURITY ERROR: GitHub token is missing or empty.")
         self.token = token
         if HAS_GITHUB:
             self.client = Github(token)

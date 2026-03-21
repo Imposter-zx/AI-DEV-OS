@@ -10,6 +10,8 @@ class SlackIntegration:
     """
     
     def __init__(self, token: str):
+        if not token or token.strip() == "":
+            raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
         self.token = token
         
     @with_retry(max_retries=3)

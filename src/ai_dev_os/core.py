@@ -105,10 +105,14 @@ class SuperpowerSkill:
         self.name = name
         self.trigger = trigger
         self.system_prompt = system_prompt
-        self.client = Anthropic()
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing. Cannot start SuperpowerSkill.")
+        self.client = Anthropic(api_key=api_key)
     
     async def execute(self, state: WorkflowState) -> str:
-        """Execute the skill against the current state."""
+        """Execute the skill against the current state with caching."""
         prompt = f"""
 {self.system_prompt}
 
@@ -122,6 +126,25 @@ Previous context:
 Generate output for this skill:
 """
         
+        # Caching optimization
+        import hashlib
+        import json
+        
+        cache_dir = Path.home() / ".ai-dev-os" / "cache"
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        
+        prompt_hash = hashlib.md5(prompt.encode('utf-8')).hexdigest()
+        cache_file = cache_dir / f"{self.name}_{prompt_hash}.json"
+        
+        if cache_file.exists():
+            state.add_log(f"Cache hit for skill optimization: {self.name}")
+            try:
+                with open(cache_file, "r") as f:
+                    data = json.load(f)
+                    return data.get("result", "")
+            except json.JSONDecodeError:
+                pass  # Fall back to generation if cache is corrupted
+                
         state.add_log(f"Executing skill: {self.name}")
         
         response = self.client.messages.create(
@@ -131,6 +154,11 @@ Generate output for this skill:
         )
         
         result = response.content[0].text
+        
+        # Save cache
+        with open(cache_file, "w") as f:
+            json.dump({"result": result}, f)
+            
         state.add_log(f"Skill {self.name} completed, tokens used: {response.usage.output_tokens}")
         
         return result
@@ -166,7 +194,11 @@ class SubagentOrchestrator:
     
     def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
         self.sandbox_provider = sandbox_provider
-        self.client = Anthropic()
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+        self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
     
     async def spawn_agent(self, config: AgentConfig, task_description: str) -> str:
@@ -289,7 +321,11 @@ class AIDevOSOrchestrator:
     
     def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
         self.sandbox_provider = sandbox_provider
-        self.client = Anthropic()
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+        self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
         
         # Initialize Superpowers skills
