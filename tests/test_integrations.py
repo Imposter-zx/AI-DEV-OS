@@ -1,6 +1,5 @@
 import sys
 import os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
 
 import pytest
 from unittest.mock import MagicMock, patch
@@ -19,7 +18,7 @@ sys.modules['httpx'] = MagicMock()
 
 @pytest.mark.asyncio
 async def test_slack_webhook():
-    from src.integrations.slack import SlackIntegration
+    from integrations.slack import SlackIntegration
     
     slack = SlackIntegration("dummy_token")
     # Simulate an incoming message event
@@ -38,7 +37,7 @@ async def test_slack_webhook():
 
 @pytest.mark.asyncio
 async def test_linear_webhook():
-    from src.integrations.linear import LinearIntegration
+    from integrations.linear import LinearIntegration
     
     linear = LinearIntegration("dummy_secret")
     payload = {
@@ -57,7 +56,7 @@ async def test_linear_webhook():
 
 @pytest.mark.asyncio
 async def test_github_webhook():
-    from src.integrations.github import GithubIntegration
+    from integrations.github import GithubIntegration
     
     github = GithubIntegration("dummy_secret")
     payload = {

@@ -1,6 +1,6 @@
 import logging
 import httpx
-from src.ai_dev_os.utils.error_handling import with_retry
+from ai_dev_os.utils.error_handling import with_retry
 
 logger = logging.getLogger(__name__)
 

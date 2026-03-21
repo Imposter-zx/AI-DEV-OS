@@ -1,5 +1,5 @@
 import pytest
-from src.ai_dev_os.skills import DebuggingSkill, PerformanceOptimizationSkill, DocumentationGenerationSkill
+from ai_dev_os.skills import DebuggingSkill, PerformanceOptimizationSkill, DocumentationGenerationSkill
 
 @pytest.mark.asyncio
 async def test_debugging_skill():
