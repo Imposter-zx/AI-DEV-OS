@@ -22,7 +22,7 @@ AI Dev OS is an integrated platform where autonomous AI agents can handle comple
 
 I have integrated the official **Unified AI Platform Architecture** from your design board into the project documentation.
 
-![Architecture Overview](file:///C:/Users/HASSA/.gemini/antigravity/brain/939dc489-ea81-40ea-847a-3133f7b9fe6b/architecture_overview.png)
+
 
 ```
 Developer Request (Slack/Linear/CLI)

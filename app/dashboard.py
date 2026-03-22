@@ -31,6 +31,7 @@ import os
 
 # ─── Authentication ────────────────────────────────────────────────
 
+
 def check_password():
     """Returns True if the user had the correct password."""
 
@@ -55,6 +56,7 @@ def check_password():
         return False
     else:
         return True
+
 
 if not check_password():
     st.stop()  # Do not continue if check_password is not True.

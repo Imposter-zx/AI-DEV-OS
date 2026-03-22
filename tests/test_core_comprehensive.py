@@ -1,46 +1,42 @@
 """
 Comprehensive tests for core.py - AIDevOSOrchestrator and related classes.
 """
-import sys
+
+import json
 import os
+import sys
+import tempfile
+from unittest.mock import MagicMock, patch
 
 import pytest
-from unittest.mock import MagicMock, patch
-import json
-import tempfile
 
 try:
     from unittest.mock import AsyncMock
 except ImportError:
+
     class AsyncMock(MagicMock):
         async def __call__(self, *args, **kwargs):
             return super(AsyncMock, self).__call__(*args, **kwargs)
 
-# Mock heavy dependencies before importing
-sys.modules['langgraph'] = MagicMock()
-sys.modules['langgraph.graph'] = MagicMock()
-sys.modules['anthropic'] = MagicMock()
 
 from ai_dev_os.core import (
-    AIDevOSOrchestrator,
-    WorkflowState,
-    WorkflowPhase,
     AgentConfig,
-    SandboxProvider,
+    AIDevOSOrchestrator,
     ClaudeHUDIntegration,
+    SandboxProvider,
     SubagentOrchestrator,
     SuperpowerSkill,
+    WorkflowPhase,
+    WorkflowState,
 )
 
-
 # ─── Workflow State Tests ───────────────────────────────────────
+
 
 class TestWorkflowState:
     def test_state_initialization(self):
         state = WorkflowState(
-            id="test-1",
-            phase=WorkflowPhase.BRAINSTORMING,
-            user_request="Build auth module"
+            id="test-1", phase=WorkflowPhase.BRAINSTORMING, user_request="Build auth module"
         )
         assert state.id == "test-1"
         assert state.phase == WorkflowPhase.BRAINSTORMING
@@ -91,13 +87,10 @@ class TestWorkflowState:
 
 # ─── Agent Config Tests ─────────────────────────────────────────
 
+
 class TestAgentConfig:
     def test_code_agent_defaults(self):
-        agent = AgentConfig(
-            name="code-agent",
-            role="code",
-            sandbox_provider=SandboxProvider.DOCKER
-        )
+        agent = AgentConfig(name="code-agent", role="code", sandbox_provider=SandboxProvider.DOCKER)
         assert "read_file" in agent.tools
         assert "write_file" in agent.tools
         assert "execute" in agent.tools
@@ -106,9 +99,7 @@ class TestAgentConfig:
 
     def test_training_agent_defaults(self):
         agent = AgentConfig(
-            name="training-agent",
-            role="training",
-            sandbox_provider=SandboxProvider.MODAL
+            name="training-agent", role="training", sandbox_provider=SandboxProvider.MODAL
         )
         assert "unsloth_train" in agent.tools
         assert "bitnet_quantize" in agent.tools
@@ -116,9 +107,7 @@ class TestAgentConfig:
 
     def test_simulation_agent_defaults(self):
         agent = AgentConfig(
-            name="sim-agent",
-            role="simulation",
-            sandbox_provider=SandboxProvider.MODAL
+            name="sim-agent", role="simulation", sandbox_provider=SandboxProvider.MODAL
         )
         assert "newton_sim" in agent.tools
         assert "plot_results" in agent.tools
@@ -126,32 +115,25 @@ class TestAgentConfig:
 
     def test_unknown_role_empty_tools(self):
         agent = AgentConfig(
-            name="unknown-agent",
-            role="unknown",
-            sandbox_provider=SandboxProvider.DOCKER
+            name="unknown-agent", role="unknown", sandbox_provider=SandboxProvider.DOCKER
         )
         assert agent.tools == []
 
     def test_custom_max_tokens(self):
         agent = AgentConfig(
-            name="test",
-            role="code",
-            sandbox_provider=SandboxProvider.DOCKER,
-            max_tokens=100000
+            name="test", role="code", sandbox_provider=SandboxProvider.DOCKER, max_tokens=100000
         )
         assert agent.max_tokens == 100000
 
     def test_custom_temperature(self):
         agent = AgentConfig(
-            name="test",
-            role="code",
-            sandbox_provider=SandboxProvider.DOCKER,
-            temperature=0.3
+            name="test", role="code", sandbox_provider=SandboxProvider.DOCKER, temperature=0.3
         )
         assert agent.temperature == 0.3
 
 
 # ─── Orchestrator Tests ──────────────────────────────────────────
+
 
 class TestAIDevOSOrchestrator:
     @patch("ai_dev_os.core.Anthropic")
@@ -209,13 +191,12 @@ class TestAIDevOSOrchestrator:
 
 # ─── HUD Integration Tests ──────────────────────────────────────
 
+
 class TestClaudeHUDIntegration:
     def test_hud_update_creates_file(self):
         hud = ClaudeHUDIntegration()
         state = WorkflowState(
-            id="hud-test",
-            phase=WorkflowPhase.EXECUTION,
-            user_request="test request"
+            id="hud-test", phase=WorkflowPhase.EXECUTION, user_request="test request"
         )
         state.context_usage = 42.5
 
@@ -241,6 +222,7 @@ class TestClaudeHUDIntegration:
 
 # ─── Sandbox Provider Tests ─────────────────────────────────────
 
+
 class TestSandboxProvider:
     def test_all_providers(self):
         assert SandboxProvider.MODAL.value == "modal"
@@ -250,6 +232,7 @@ class TestSandboxProvider:
 
 
 # ─── Workflow Phase Tests ────────────────────────────────────────
+
 
 class TestWorkflowPhase:
     def test_all_phases(self):

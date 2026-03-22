@@ -7,25 +7,23 @@ Coordinates Deep Agents, Superpowers skills, sandboxes, training, simulation, an
 import asyncio
 import json
 import logging
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
-from langgraph.graph import StateGraph, START, END
 from anthropic import Anthropic
+from langgraph.graph import END, START, StateGraph
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
 class WorkflowPhase(Enum):
     """Stages of the AI Dev OS workflow."""
+
     BRAINSTORMING = "brainstorming"
     PLANNING = "planning"
     EXECUTION = "execution"
@@ -35,6 +33,7 @@ class WorkflowPhase(Enum):
 
 class SandboxProvider(Enum):
     """Supported sandbox providers."""
+
     MODAL = "modal"
     DAYTONA = "daytona"
     RUNLOOP = "runloop"
@@ -44,23 +43,24 @@ class SandboxProvider(Enum):
 @dataclass
 class AgentConfig:
     """Configuration for a subagent."""
+
     name: str
     role: str  # "code", "training", "simulation"
     sandbox_provider: SandboxProvider
     max_tokens: int = 50000
     temperature: float = 0.7
     tools: List[str] = None
-    
+
     def __post_init__(self):
         if self.tools is None:
             self.tools = self._default_tools()
-    
+
     def _default_tools(self) -> List[str]:
         """Return default tools based on role."""
         defaults = {
             "code": ["read_file", "write_file", "execute", "git_commit", "github_pr"],
             "training": ["unsloth_train", "bitnet_quantize", "model_upload"],
-            "simulation": ["newton_sim", "plot_results", "upload_metrics"]
+            "simulation": ["newton_sim", "plot_results", "upload_metrics"],
         }
         return defaults.get(self.role, [])
 
@@ -68,6 +68,7 @@ class AgentConfig:
 @dataclass
 class WorkflowState:
     """Complete state of a workflow execution."""
+
     id: str
     phase: WorkflowPhase
     user_request: str
@@ -79,7 +80,7 @@ class WorkflowState:
     active_agents: List[str] = None
     logs: List[str] = None
     created_at: str = None
-    
+
     def __post_init__(self):
         if self.subagent_configs is None:
             self.subagent_configs = []
@@ -91,7 +92,7 @@ class WorkflowState:
             self.logs = []
         if self.created_at is None:
             self.created_at = datetime.utcnow().isoformat()
-    
+
     def add_log(self, message: str):
         """Add a log entry."""
         self.logs.append(f"[{datetime.utcnow().isoformat()}] {message}")
@@ -100,17 +101,20 @@ class WorkflowState:
 
 class SuperpowerSkill:
     """Wrapper for Superpowers skills."""
-    
+
     def __init__(self, name: str, trigger: str, system_prompt: str):
         self.name = name
         self.trigger = trigger
         self.system_prompt = system_prompt
         import os
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing. Cannot start SuperpowerSkill.")
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing. Cannot start SuperpowerSkill."
+            )
         self.client = Anthropic(api_key=api_key)
-    
+
     async def execute(self, state: WorkflowState) -> str:
         """Execute the skill against the current state with caching."""
         prompt = f"""
@@ -125,17 +129,17 @@ Previous context:
 
 Generate output for this skill:
 """
-        
+
         # Caching optimization
         import hashlib
         import json
-        
+
         cache_dir = Path.home() / ".ai-dev-os" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
-        
-        prompt_hash = hashlib.md5(prompt.encode('utf-8')).hexdigest()
+
+        prompt_hash = hashlib.md5(prompt.encode("utf-8")).hexdigest()
         cache_file = cache_dir / f"{self.name}_{prompt_hash}.json"
-        
+
         if cache_file.exists():
             state.add_log(f"Cache hit for skill optimization: {self.name}")
             try:
@@ -144,33 +148,33 @@ Generate output for this skill:
                     return data.get("result", "")
             except json.JSONDecodeError:
                 pass  # Fall back to generation if cache is corrupted
-                
+
         state.add_log(f"Executing skill: {self.name}")
-        
+
         response = self.client.messages.create(
             model="claude-opus-4-20250514",
             max_tokens=4096,
-            messages=[{"role": "user", "content": prompt}]
+            messages=[{"role": "user", "content": prompt}],
         )
-        
+
         result = response.content[0].text
-        
+
         # Save cache
         with open(cache_file, "w") as f:
             json.dump({"result": result}, f)
-            
+
         state.add_log(f"Skill {self.name} completed, tokens used: {response.usage.output_tokens}")
-        
+
         return result
 
 
 class ClaudeHUDIntegration:
     """Real-time Claude HUD status updates."""
-    
+
     def __init__(self):
         self.status_file = Path.home() / ".ai-dev-os" / "hud_status.json"
         self.status_file.parent.mkdir(parents=True, exist_ok=True)
-    
+
     def update(self, state: WorkflowState, context_usage: float, active_agents: List[str]):
         """Update HUD with current state."""
         status = {
@@ -180,32 +184,37 @@ class ClaudeHUDIntegration:
             "active_agents": active_agents,
             "recent_logs": state.logs[-3:] if state.logs else [],
         }
-        
-        with open(self.status_file, 'w') as f:
+
+        with open(self.status_file, "w") as f:
             json.dump(status, f, indent=2)
-        
+
         # Format for terminal display
         agent_str = ", ".join(active_agents) if active_agents else "none"
-        print(f"\n[HUD] Phase: {state.phase.value} | Context: {context_usage:.1f}% | Agents: {agent_str}")
+        print(
+            f"\n[HUD] Phase: {state.phase.value} | Context: {context_usage:.1f}% | Agents: {agent_str}"
+        )
 
 
 class SubagentOrchestrator:
     """Orchestrates parallel subagent execution."""
-    
+
     def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
         self.sandbox_provider = sandbox_provider
         import os
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing."
+            )
         self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
-    
+
     async def spawn_agent(self, config: AgentConfig, task_description: str) -> str:
         """Spawn a subagent to handle a specific task."""
-        
+
         tools_str = "\n".join([f"- {tool}" for tool in config.tools])
-        
+
         system_prompt = f"""
 You are a specialized {config.role} agent in an autonomous development system.
 
@@ -224,39 +233,39 @@ Guidelines:
 Task:
 {task_description}
 """
-        
+
         logger.info(f"Spawning subagent: {config.name} (role: {config.role})")
-        
+
         response = self.client.messages.create(
             model="claude-opus-4-20250514",
             max_tokens=config.max_tokens,
             temperature=config.temperature,
             system=system_prompt,
-            messages=[{"role": "user", "content": "Begin execution."}]
+            messages=[{"role": "user", "content": "Begin execution."}],
         )
-        
+
         result = response.content[0].text
         logger.info(f"Subagent {config.name} completed")
-        
+
         return result
-    
+
     async def orchestrate(self, state: WorkflowState) -> WorkflowState:
         """Orchestrate all subagents in parallel."""
-        
+
         state.add_log(f"Starting parallel execution of {len(state.subagent_configs)} agents")
         state.phase = WorkflowPhase.EXECUTION
-        
+
         # Update HUD
         agent_names = [cfg.name for cfg in state.subagent_configs]
         self.hud.update(state, state.context_usage, agent_names)
-        
+
         # Execute all agents in parallel
         tasks = []
         for config in state.subagent_configs:
             task_desc = self._generate_task_description(state, config)
             task = self.spawn_agent(config, task_desc)
             tasks.append((config.name, task))
-        
+
         # Gather results
         results = {}
         for agent_name, task in tasks:
@@ -267,18 +276,18 @@ Task:
             except Exception as e:
                 state.add_log(f"Agent {agent_name} failed: {str(e)}")
                 results[agent_name] = f"ERROR: {str(e)}"
-        
+
         state.execution_results = results
         state.add_log("Parallel execution completed")
-        
+
         # Update HUD
         self.hud.update(state, state.context_usage, [])
-        
+
         return state
-    
+
     def _generate_task_description(self, state: WorkflowState, config: AgentConfig) -> str:
         """Generate specific task description for an agent."""
-        
+
         task_descriptions = {
             "code": f"""
 Implement the following plan:
@@ -310,33 +319,36 @@ Requirements:
 - Measure success rate and stability
 - Generate plots and metrics
 - Report results for validation
-"""
+""",
         }
-        
+
         return task_descriptions.get(config.role, "Execute this task: " + state.implementation_plan)
 
 
 class AIDevOSOrchestrator:
     """Main orchestrator for the entire AI Dev OS system."""
-    
+
     def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
         self.sandbox_provider = sandbox_provider
         import os
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
-            raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing."
+            )
         self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
-        
+
         # Initialize Superpowers skills
         self.skills = self._load_skills()
-        
+
         # Subagent orchestrator
         self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider)
-        
+
         # Load AGENTS.md rules
         self.agents_rules = self._load_agents_rules()
-    
+
     def _load_skills(self) -> Dict[str, SuperpowerSkill]:
         """Load Superpowers skills."""
         return {
@@ -347,7 +359,7 @@ class AIDevOSOrchestrator:
 You are a brainstorming expert. Help refine the user's idea through Socratic questioning.
 Ask clarifying questions, explore alternatives, and present the design in digestible chunks.
 Output: A clear design document with requirements, architecture, and acceptance criteria.
-"""
+""",
             ),
             "planning": SuperpowerSkill(
                 name="planning",
@@ -356,7 +368,7 @@ Output: A clear design document with requirements, architecture, and acceptance 
 You are a project planning expert. Break the design into bite-sized tasks (2-5 min each).
 Each task must include: exact file paths, complete code snippets, and verification steps.
 Output: A detailed implementation plan with task list and dependencies.
-"""
+""",
             ),
             "code-review": SuperpowerSkill(
                 name="code-review",
@@ -365,21 +377,21 @@ Output: A detailed implementation plan with task list and dependencies.
 You are a code reviewer. Check the implementation against the plan.
 Report issues by severity: critical (blocks merge), major (should fix), minor (nice to have).
 Output: Review report with issues and recommendations.
-"""
-            )
+""",
+            ),
         }
-    
+
     def _load_agents_rules(self) -> Dict[str, Any]:
         """Load AGENTS.md rules from repo."""
         agents_md = Path.cwd() / "AGENTS.md"
-        
+
         if not agents_md.exists():
             logger.warning("AGENTS.md not found, using defaults")
             return {}
-        
+
         # Parse AGENTS.md (simplified - in production use proper markdown parser)
         content = agents_md.read_text()
-        
+
         rules = {
             "raw": content,
             "enforce_brainstorming": "brainstorming: REQUIRED" in content,
@@ -387,141 +399,138 @@ Output: Review report with issues and recommendations.
             "enforce_tdd": "test-driven-development: REQUIRED" in content,
             "enforce_review": "requesting-code-review: REQUIRED" in content,
         }
-        
+
         return rules
-    
+
     async def run(self, user_request: str) -> WorkflowState:
         """Main entry point: run a complete workflow."""
-        
+
         # Initialize workflow state
         import uuid
+
         state = WorkflowState(
-            id=str(uuid.uuid4()),
-            phase=WorkflowPhase.BRAINSTORMING,
-            user_request=user_request
+            id=str(uuid.uuid4()), phase=WorkflowPhase.BRAINSTORMING, user_request=user_request
         )
-        
+
         state.add_log(f"Starting workflow for request: {user_request}")
         self.hud.update(state, state.context_usage, [])
-        
+
         # Phase 1: Brainstorming
         logger.info("=" * 60)
         logger.info("PHASE 1: BRAINSTORMING")
         logger.info("=" * 60)
-        
+
         design_doc = await self.skills["brainstorming"].execute(state)
         state.design_doc = design_doc
         state.add_log("Design doc generated")
-        
+
         print("\n📋 DESIGN DOCUMENT:\n")
         print(design_doc)
         print("\n" + "=" * 60)
-        
+
         # Ask for approval
         user_approval = input("\nApprove design? (yes/no): ").lower().strip()
         if user_approval != "yes":
             state.add_log("Design rejected by user")
             return state
-        
+
         state.add_log("Design approved by user")
-        
+
         # Phase 2: Planning
         logger.info("=" * 60)
         logger.info("PHASE 2: PLANNING")
         logger.info("=" * 60)
-        
+
         state.phase = WorkflowPhase.PLANNING
         plan = await self.skills["planning"].execute(state)
         state.implementation_plan = plan
         state.add_log("Implementation plan generated")
-        
+
         print("\n📝 IMPLEMENTATION PLAN:\n")
         print(plan)
         print("\n" + "=" * 60)
-        
+
         # Phase 3: Execution (Subagents)
         logger.info("=" * 60)
         logger.info("PHASE 3: EXECUTION (Subagents)")
         logger.info("=" * 60)
-        
+
         # Determine which agents we need
         state.subagent_configs = self._determine_agents(user_request)
-        
+
         state = await self.subagent_orchestrator.orchestrate(state)
-        
+
         # Phase 4: Validation & Code Review
         logger.info("=" * 60)
         logger.info("PHASE 4: VALIDATION & CODE REVIEW")
         logger.info("=" * 60)
-        
+
         state.phase = WorkflowPhase.VALIDATION
         review = await self.skills["code-review"].execute(state)
         state.add_log("Code review completed")
-        
+
         print("\n✅ CODE REVIEW:\n")
         print(review)
-        
+
         # Phase 5: Merge (in production, this auto-creates PR)
         logger.info("=" * 60)
         logger.info("PHASE 5: MERGE")
         logger.info("=" * 60)
-        
+
         state.phase = WorkflowPhase.MERGE
         state.add_log("Workflow completed successfully")
-        
+
         print("\n🎉 Workflow completed! PR ready for review.")
-        
+
         return state
-    
+
     def _determine_agents(self, user_request: str) -> List[AgentConfig]:
         """Determine which agents are needed for this request."""
-        
+
         request_lower = user_request.lower()
         agents = []
-        
+
         # Heuristic: detect what kind of task this is
         if any(word in request_lower for word in ["code", "build", "feature", "fix", "test"]):
-            agents.append(AgentConfig(
-                name="code-agent",
-                role="code",
-                sandbox_provider=self.sandbox_provider
-            ))
-        
+            agents.append(
+                AgentConfig(name="code-agent", role="code", sandbox_provider=self.sandbox_provider)
+            )
+
         if any(word in request_lower for word in ["train", "finetune", "model", "lora"]):
-            agents.append(AgentConfig(
-                name="training-agent",
-                role="training",
-                sandbox_provider=self.sandbox_provider
-            ))
-        
+            agents.append(
+                AgentConfig(
+                    name="training-agent", role="training", sandbox_provider=self.sandbox_provider
+                )
+            )
+
         if any(word in request_lower for word in ["simul", "robot", "physic", "test"]):
-            agents.append(AgentConfig(
-                name="simulation-agent",
-                role="simulation",
-                sandbox_provider=self.sandbox_provider
-            ))
-        
+            agents.append(
+                AgentConfig(
+                    name="simulation-agent",
+                    role="simulation",
+                    sandbox_provider=self.sandbox_provider,
+                )
+            )
+
         # Default to code agent if unclear
         if not agents:
-            agents.append(AgentConfig(
-                name="code-agent",
-                role="code",
-                sandbox_provider=self.sandbox_provider
-            ))
-        
+            agents.append(
+                AgentConfig(name="code-agent", role="code", sandbox_provider=self.sandbox_provider)
+            )
+
         return agents
 
 
 async def main():
     """Example main function."""
-    
+
     orchestrator = AIDevOSOrchestrator(sandbox_provider=SandboxProvider.MODAL)
-    
+
     # Example request
     user_request = "Build a simple authentication module with tests and documentation"
-    
+
     state = await orchestrator.run(user_request)
-    
+
     # Print summary
     print("\n" + "=" * 60)
     print("WORKFLOW SUMMARY")
@@ -530,12 +539,12 @@ async def main():
     print(f"Status: {'COMPLETED' if state.phase == WorkflowPhase.MERGE else 'IN PROGRESS'}")
     print(f"Total logs: {len(state.logs)}")
     print(f"Agents used: {len(state.subagent_configs)}")
-    
+
     # Save state for reference
     state_file = Path.home() / ".ai-dev-os" / f"workflow_{state.id}.json"
     state_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(state_file, 'w') as f:
+
+    with open(state_file, "w") as f:
         # Convert dataclasses to dicts for JSON serialization
         state_dict = {
             "id": state.id,
@@ -545,10 +554,10 @@ async def main():
             "implementation_plan": state.implementation_plan,
             "execution_results": state.execution_results,
             "created_at": state.created_at,
-            "logs": state.logs
+            "logs": state.logs,
         }
         json.dump(state_dict, f, indent=2)
-    
+
     print(f"\nWorkflow state saved to: {state_file}")
 
 

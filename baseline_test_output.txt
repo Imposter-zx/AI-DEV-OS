@@ -1,0 +1,250 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\HASSA\Desktop\AI-DEV-OS
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, langsmith-0.7.22, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 38 items
+
+tests\test_core.py F..                                                   [  7%]
+tests\test_core_comprehensive.py ..........FFFFFFF....                   [ 63%]
+tests\test_integrations.py ...                                           [ 71%]
+tests\test_models.py ..                                                  [ 76%]
+tests\test_sandbox.py ..                                                 [ 81%]
+tests\test_skills.py ...                                                 [ 89%]
+tests\test_utils.py ....                                                 [100%]
+
+================================== FAILURES ===================================
+______________________ test_orchestrator_initialization _______________________
+
+mock_anthropic = <MagicMock name='Anthropic' id='2079902152224'>
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_initialization(mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator(sandbox_provider=SandboxProvider.DOCKER)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core.py:21: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443D59730>
+sandbox_provider = <SandboxProvider.DOCKER: 'docker'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+_________________ TestAIDevOSOrchestrator.test_initialization _________________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D22780>
+mock_anthropic = <MagicMock name='Anthropic' id='2079901408464'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_initialization(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator(sandbox_provider=SandboxProvider.DOCKER)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:159: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443C8DB50>
+sandbox_provider = <SandboxProvider.DOCKER: 'docker'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+_____________ TestAIDevOSOrchestrator.test_determine_agents_code ______________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D22750>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902247408'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_determine_agents_code(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:167: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443D5A750>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+___________ TestAIDevOSOrchestrator.test_determine_agents_training ____________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D21FA0>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902744544'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_determine_agents_training(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:174: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443DD1A00>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+__________ TestAIDevOSOrchestrator.test_determine_agents_simulation ___________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D21A60>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902742240'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_determine_agents_simulation(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:181: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443DD26C0>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+____________ TestAIDevOSOrchestrator.test_determine_agents_default ____________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D21700>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902741376'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_determine_agents_default(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:188: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443DD1640>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+__________ TestAIDevOSOrchestrator.test_determine_agents_multi_role ___________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D210D0>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902622560'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_determine_agents_multi_role(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:195: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443DB5790>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+_________________ TestAIDevOSOrchestrator.test_skills_loaded __________________
+
+self = <test_core_comprehensive.TestAIDevOSOrchestrator object at 0x000001E443D20CB0>
+mock_anthropic = <MagicMock name='Anthropic' id='2079902743632'>
+
+    @patch("ai_dev_os.core.Anthropic")
+    def test_skills_loaded(self, mock_anthropic):
+>       orchestrator = AIDevOSOrchestrator()
+                       ^^^^^^^^^^^^^^^^^^^^^
+
+tests\test_core_comprehensive.py:203: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <ai_dev_os.core.AIDevOSOrchestrator object at 0x000001E443DD3B90>
+sandbox_provider = <SandboxProvider.MODAL: 'modal'>
+
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+        self.sandbox_provider = sandbox_provider
+        import os
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+>           raise ValueError("CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.")
+E           ValueError: CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing.
+
+src\ai_dev_os\core.py:327: ValueError
+============================== warnings summary ===============================
+tests/test_core.py::test_workflow_state_logging
+tests/test_core_comprehensive.py::TestWorkflowState::test_state_initialization
+tests/test_core_comprehensive.py::TestWorkflowState::test_add_log
+tests/test_core_comprehensive.py::TestWorkflowState::test_state_transitions
+tests/test_core_comprehensive.py::TestWorkflowState::test_context_usage
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_creates_file
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_empty_agents
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:93: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.created_at = datetime.utcnow().isoformat()
+
+tests/test_core.py::test_workflow_state_logging
+tests/test_core_comprehensive.py::TestWorkflowState::test_add_log
+tests/test_core_comprehensive.py::TestWorkflowState::test_add_log
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:97: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.logs.append(f"[{datetime.utcnow().isoformat()}] {message}")
+
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_creates_file
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_empty_agents
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:177: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/test_core.py::test_orchestrator_initialization - ValueError: CRI...
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_initialization
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_determine_agents_code
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_determine_agents_training
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_determine_agents_simulation
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_determine_agents_default
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_determine_agents_multi_role
+FAILED tests/test_core_comprehensive.py::TestAIDevOSOrchestrator::test_skills_loaded
+================== 8 failed, 30 passed, 12 warnings in 3.59s ==================

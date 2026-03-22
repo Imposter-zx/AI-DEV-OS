@@ -13,37 +13,38 @@ AI Dev OS is a unified platform for autonomous AI agent development, combining:
 
 ### Unified Platform Architecture
 
-The following diagram illustrates the integrated flow of the six core technologies within AI Dev OS, as defined in the official platform design:
+The following diagram illustrates the integrated flow of the six core technologies within AI Dev OS, as defined in the official platform design board:
 
-![Architecture Overview](file:///C:/Users/HASSA/.gemini/antigravity/brain/939dc489-ea81-40ea-847a-3133f7b9fe6b/architecture_overview.png)
+
+**[Official Figma Board: Unified AI Platform Architecture](https://www.figma.com/board/A4TS4yuzBMF9g3IiMcdrBu/unified_ai_platform_architecture?node-id=0-1&t=C9sd6PrCRYsozLOb-0)**
 
 ```mermaid
 graph TD
-    Start((brainstorm)) -->|refinement| B[Superpowers Skill:<br/>Brainstorming + Design]
-    B -->|dispatch| C{Approved Spec +<br/>Implementation Plan}
-    C --> D[Subagent Orchestration:<br/>LangGraph + Middleware]
+    Start((brainstorm)) -->|refinement| B["Superpowers Skill:<br/>Brainstorming + Design"]
+    B -->|dispatch| C{"Approved Spec +<br/>Implementation Plan"}
+    C --> D["Subagent Orchestration:<br/>LangGraph + Middleware"]
     
-    D -->|spawn Agent C| E[Sim Agent in Sandbox]
-    D -->|spawn Agent B| F[Training Agent in Sandbox]
-    D -->|spawn Agent A| G[Code Agent in Sandbox]
+    D -->|spawn Agent C| E["Sim Agent (Newton)"]
+    D -->|spawn Agent B| F["Training Agent (Unsloth)"]
+    D -->|spawn Agent A| G["Code Agent (Sandbox)"]
     
     E -->|Newton| H[Newton Engine]
     F -->|Unsloth| I[Unsloth Framework]
     
-    H --> J[Physics Simulation:<br/>GPU-accelerated]
-    I --> K[Model Training:<br/>2x faster, 70% less VRAM]
+    H -->|metrics| J["Physics Simulation:<br/>GPU-accelerated"]
+    I -->|checkpoints| K["Model Training:<br/>2x faster, 70% less VRAM"]
     
-    J -->|results| L[BitNet.cpp:<br/>1-bit inference]
-    K -->|checkpoint| L
+    J -->|results| L["BitNet.cpp:<br/>1-bit inference"]
+    K -->|loss curves| L
     
-    G -->|read/write/test| M[Isolated Cloud Sandbox:<br/>Modal/Daytona]
+    G -->|read/write/test| M["Isolated Cloud Sandbox:<br/>Modal/Daytona"]
     L -->|test code| M
     
-    G -->|code ready| N[Superpowers Skills:<br/>TDD + Code Review]
-    N -->|verified| O[Merge & Deploy:<br/>Auto-PR + GitHub]
+    G -->|code ready| N["Superpowers Skills:<br/>TDD + Code Review"]
+    N -->|verified| O["Merge & Deploy:<br/>Auto-PR + GitHub"]
     O --> Production[[Live Result:<br/>Agent output running]]
     
-    J -->|metrics| P[Claude HUD:<br/>Status + Context + Tools]
+    J -->|metrics| P["Claude HUD:<br/>Status + Context + Tools"]
     K -->|loss curves| P
     L -->|real-time data| P
     M -->|logs| P

@@ -92,11 +92,13 @@ class GitHubIntegration:
 
         repos = []
         for repo in self.client.get_user().get_repos():
-            repos.append({
-                "name": repo.full_name,
-                "url": repo.html_url,
-                "default_branch": repo.default_branch,
-            })
+            repos.append(
+                {
+                    "name": repo.full_name,
+                    "url": repo.html_url,
+                    "default_branch": repo.default_branch,
+                }
+            )
         return repos
 
     async def get_open_issues(self, repo_name: str) -> List[Dict[str, Any]]:
@@ -108,18 +110,22 @@ class GitHubIntegration:
             repo = self.client.get_repo(repo_name)
             issues = []
             for issue in repo.get_issues(state="open"):
-                issues.append({
-                    "number": issue.number,
-                    "title": issue.title,
-                    "body": issue.body or "",
-                    "labels": [l.name for l in issue.labels],
-                })
+                issues.append(
+                    {
+                        "number": issue.number,
+                        "title": issue.title,
+                        "body": issue.body or "",
+                        "labels": [l.name for l in issue.labels],
+                    }
+                )
             return issues
         except GithubException as e:
             logger.error(f"Failed to fetch issues: {e}")
             return []
 
-    async def create_branch(self, repo_name: str, branch_name: str, from_branch: str = "main") -> bool:
+    async def create_branch(
+        self, repo_name: str, branch_name: str, from_branch: str = "main"
+    ) -> bool:
         """Create a new branch from an existing one."""
         if not HAS_GITHUB or not self.client:
             logger.warning("Simulating branch creation.")
