@@ -19,4 +19,9 @@ To automate Pull Requests and webhooks:
 
 - Docker (Local sandbox, good for development)
 - Modal (Cloud GPU sandbox, essential for `unsloth` and `newton`)
-- Daytona & Runloop (Coming soon)
+- Daytona (Remote workspace API and port forwarding)
+- Runloop (Coming soon)
+
+## 4. Monitoring & Observability
+- Prometheus metrics are managed by the `MetricsManager` in `ai_dev_os.utils.monitoring`.
+- Metrics tracked: token usage, workflow latencies, estimated costs, and active agent counts.

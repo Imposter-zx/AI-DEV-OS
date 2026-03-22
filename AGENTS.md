@@ -304,6 +304,6 @@ A: No. Use Claude only (via Anthropic API). No other providers.
 
 ---
 
-**Version**: 1.0
-**Last Updated**: 2024-01-01
-**Maintained By**: [Your Team Name]
+**Version**: 1.1.0
+**Last Updated**: 2026-03-22
+**Maintained By**: AI Dev OS Build Team

@@ -373,7 +373,8 @@ uv run pytest tests/test_core_comprehensive.py
 - ✅ **Slack/Linear invocation** with strict secret validation
 - ✅ **Newton physics simulation**
 - ✅ **Modern CI/CD** (`uv` based deterministic builds + Security gating with Bandit)
-- 🔜 Daytona & Runloop sandbox support
+- ✅ **Daytona Sandbox Support** (Remote workspace orchestration)
+- 🔜 Runloop sandbox support
 - 🔜 Multi-GPU training optimization
 
 ## 🤝 Contributing

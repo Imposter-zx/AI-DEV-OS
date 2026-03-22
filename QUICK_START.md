@@ -192,7 +192,7 @@ state = await orchestrator.run("Build authentication module")
 Supports:
 - Modal (cloud GPU)
 - Docker (local)
-- Daytona (ready to add)
+- Daytona (remote dev environments)
 - Custom sandboxes
 
 ```python

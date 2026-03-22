@@ -330,12 +330,11 @@ Validation:
 - ✅ Unsloth (training)
 - ✅ Newton (physics sim, mockable)
 - ✅ BitNet (inference, mockable)
+- ✅ Slack Bot & Linear Integration
+- ✅ GitHub OAuth & Auto-PRs
+- ✅ Daytona Sandbox
 
 ### Ready to Add (Stubs Present)
-- 🟡 Slack Bot
-- 🟡 Linear Integration
-- 🟡 GitHub OAuth
-- 🟡 Daytona Sandbox
 - 🟡 Runloop Sandbox
 
 ### Easy to Add (Extensible)
