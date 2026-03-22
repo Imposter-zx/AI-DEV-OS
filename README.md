@@ -261,7 +261,7 @@ Create `~/.claude/plugins/claude-hud/config.json`:
 
 ## 📚 Documentation
 
-- [**ARCHITECTURE.md**](docs/ARCHITECTURE.md) - Deep dive into system design
+- [**ARCHITECTURE.md**](ARCHITECTURE.md) - Deep dive into system design
 - [**SETUP_GUIDE.md**](docs/SETUP_GUIDE.md) - Detailed installation for each OS
 - [**WORKFLOWS.md**](docs/WORKFLOWS.md) - How to trigger and manage agent workflows
 - [**CUSTOMIZATION.md**](docs/CUSTOMIZATION.md) - Extend with custom skills/tools
