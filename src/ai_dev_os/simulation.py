@@ -99,7 +99,9 @@ class NewtonSimulation:
             rewards.append(reward)
 
             if (i + 1) % 25 == 0:
-                logger.info(f"Episode {i + 1}/{self.config.episodes} — avg reward: {sum(rewards) / len(rewards):.2f}")
+                logger.info(
+                    f"Episode {i + 1}/{self.config.episodes} — avg reward: {sum(rewards) / len(rewards):.2f}"
+                )
 
         elapsed = time.time() - start_time
         total_steps = self.config.episodes * self.config.max_steps_per_episode

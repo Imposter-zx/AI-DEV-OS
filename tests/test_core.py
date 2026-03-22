@@ -1,20 +1,23 @@
-import sys
 import os
-
-import pytest
+import sys
 from unittest.mock import MagicMock, patch
 
-# Mock Python 3.9+ dependencies that are unavailable
-sys.modules['langgraph'] = MagicMock()
-sys.modules['langgraph.graph'] = MagicMock()
-sys.modules['anthropic'] = MagicMock()
+import pytest
 
-from ai_dev_os.core import AIDevOSOrchestrator, WorkflowState, WorkflowPhase, AgentConfig, SandboxProvider
+from ai_dev_os.core import (
+    AgentConfig,
+    AIDevOSOrchestrator,
+    SandboxProvider,
+    WorkflowPhase,
+    WorkflowState,
+)
+
 
 @pytest.fixture
 def mock_anthropic():
     with patch("ai_dev_os.core.Anthropic") as mock:
         yield mock
+
 
 @pytest.mark.asyncio
 async def test_orchestrator_initialization(mock_anthropic):
@@ -22,12 +25,14 @@ async def test_orchestrator_initialization(mock_anthropic):
     assert orchestrator.sandbox_provider == SandboxProvider.DOCKER
     assert "brainstorming" in orchestrator.skills
 
+
 @pytest.mark.asyncio
 async def test_workflow_state_logging():
     state = WorkflowState(id="test-1", phase=WorkflowPhase.BRAINSTORMING, user_request="test")
     state.add_log("Testing log")
     assert len(state.logs) == 1
     assert "Testing log" in state.logs[0]
+
 
 @pytest.mark.asyncio
 async def test_agent_config_defaults():

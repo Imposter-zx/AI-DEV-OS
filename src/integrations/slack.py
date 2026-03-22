@@ -1,19 +1,22 @@
 import logging
+
 import httpx
+
 from ai_dev_os.utils.error_handling import with_retry
 
 logger = logging.getLogger(__name__)
+
 
 class SlackIntegration:
     """
     Handles Slack incoming webhooks and events for AI Dev OS.
     """
-    
+
     def __init__(self, token: str):
         if not token or token.strip() == "":
             raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
         self.token = token
-        
+
     @with_retry(max_retries=3)
     async def send_notification(self, message: str) -> dict:
         """
@@ -36,5 +39,5 @@ class SlackIntegration:
             # Here we would invoke AIDevOSOrchestrator
             logger.info(f"Triggering orchestrator for request: {text}")
             return {"status": "accepted", "message": "Invoking AI Dev OS"}
-            
+
         return {"status": "ignored", "message": "No trigger found"}

@@ -15,10 +15,7 @@ import os
 from pathlib import Path
 
 # Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -26,13 +23,13 @@ def setup_claude_hud_config():
     """Setup Claude HUD configuration."""
     hud_config_dir = Path.home() / ".claude" / "plugins" / "claude-hud"
     hud_config_dir.mkdir(parents=True, exist_ok=True)
-    
+
     config_file = hud_config_dir / "config.json"
-    
+
     if config_file.exists():
         logger.info(f"Claude HUD config already exists at {config_file}")
         return
-    
+
     config = {
         "lineLayout": "expanded",
         "pathLevels": 2,
@@ -41,7 +38,7 @@ def setup_claude_hud_config():
             "enabled": True,
             "showDirty": True,
             "showAheadBehind": False,
-            "showFileStats": False
+            "showFileStats": False,
         },
         "display": {
             "showModel": True,
@@ -53,20 +50,20 @@ def setup_claude_hud_config():
             "showTools": True,
             "showAgents": True,
             "showTodos": True,
-            "showSessionName": False
+            "showSessionName": False,
         },
         "colors": {
             "context": "cyan",
             "usage": "cyan",
             "warning": "yellow",
             "usageWarning": "brightMagenta",
-            "critical": "red"
-        }
+            "critical": "red",
+        },
     }
-    
-    with open(config_file, 'w') as f:
+
+    with open(config_file, "w") as f:
         json.dump(config, f, indent=2)
-    
+
     logger.info(f"✓ Claude HUD config created at {config_file}")
 
 
@@ -81,7 +78,7 @@ def setup_local_directories():
         Path.cwd() / ".ai-dev-os" / "data",
         Path.cwd() / ".ai-dev-os" / "results",
     ]
-    
+
     for directory in dirs:
         directory.mkdir(parents=True, exist_ok=True)
         logger.info(f"✓ Directory created: {directory}")
@@ -90,17 +87,18 @@ def setup_local_directories():
 async def test_modal_setup():
     """Test Modal sandbox setup."""
     logger.info("Testing Modal setup...")
-    
+
     try:
         import modal
+
         logger.info("✓ Modal SDK installed")
-        
+
         # Test authentication
         if os.environ.get("MODAL_TOKEN_ID") and os.environ.get("MODAL_TOKEN_SECRET"):
             logger.info("✓ Modal credentials detected")
         else:
             logger.warning("⚠ Modal credentials not found. Run: modal token new")
-        
+
         return True
     except ImportError:
         logger.error("✗ Modal not installed. Run: pip install modal")
@@ -110,9 +108,10 @@ async def test_modal_setup():
 async def test_docker_setup():
     """Test Docker sandbox setup."""
     logger.info("Testing Docker setup...")
-    
+
     try:
         import docker
+
         client = docker.from_env()
         client.ping()
         logger.info("✓ Docker is running")
@@ -128,21 +127,21 @@ async def test_docker_setup():
 async def test_anthropic_setup():
     """Test Anthropic API setup."""
     logger.info("Testing Anthropic API setup...")
-    
+
     try:
         import anthropic
-        
+
         api_key = os.environ.get("ANTHROPIC_API_KEY")
         if not api_key:
             logger.error("✗ ANTHROPIC_API_KEY not set")
             return False
-        
+
         client = anthropic.Anthropic()
         # Test with a simple message
         response = client.messages.create(
             model="claude-opus-4-20250514",
             max_tokens=10,
-            messages=[{"role": "user", "content": "Hi"}]
+            messages=[{"role": "user", "content": "Hi"}],
         )
         logger.info("✓ Anthropic API working")
         return True
@@ -154,11 +153,11 @@ async def test_anthropic_setup():
 def create_env_file():
     """Create .env file template if it doesn't exist."""
     env_file = Path.cwd() / ".env"
-    
+
     if env_file.exists():
         logger.info(f"✓ .env file already exists")
         return
-    
+
     env_content = """# AI Dev OS Environment Variables
 
 # Anthropic API
@@ -185,10 +184,10 @@ LOG_DIR=~/.ai-dev-os/logs
 # Development
 DEBUG=false
 """
-    
-    with open(env_file, 'w') as f:
+
+    with open(env_file, "w") as f:
         f.write(env_content)
-    
+
     logger.info(f"✓ .env file created. Please edit with your configuration.")
 
 
@@ -199,52 +198,48 @@ async def main():
         "--provider",
         choices=["modal", "docker", "both"],
         default="docker",
-        help="Sandbox provider to test"
+        help="Sandbox provider to test",
     )
-    parser.add_argument(
-        "--skip-tests",
-        action="store_true",
-        help="Skip provider tests"
-    )
-    
+    parser.add_argument("--skip-tests", action="store_true", help="Skip provider tests")
+
     args = parser.parse_args()
-    
+
     logger.info("=" * 60)
     logger.info("AI Dev OS Setup")
     logger.info("=" * 60)
-    
+
     # Setup directories and config
     logger.info("\n[1/4] Setting up directories...")
     setup_local_directories()
-    
+
     logger.info("\n[2/4] Setting up Claude HUD...")
     setup_claude_hud_config()
-    
+
     logger.info("\n[3/4] Creating .env file...")
     create_env_file()
-    
+
     logger.info("\n[4/4] Testing providers...")
-    
+
     if not args.skip_tests:
         results = {}
-        
+
         if args.provider in ["modal", "both"]:
             results["modal"] = await test_modal_setup()
-        
+
         if args.provider in ["docker", "both"]:
             results["docker"] = await test_docker_setup()
-        
+
         # Always test Anthropic
         results["anthropic"] = await test_anthropic_setup()
-        
+
         logger.info("\n" + "=" * 60)
         logger.info("Setup Status")
         logger.info("=" * 60)
-        
+
         for provider, success in results.items():
             status = "✓ PASS" if success else "✗ FAIL"
             logger.info(f"{status}: {provider}")
-    
+
     logger.info("\n" + "=" * 60)
     logger.info("Setup Complete!")
     logger.info("=" * 60)

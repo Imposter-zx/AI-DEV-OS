@@ -1,5 +1,11 @@
 import pytest
-from ai_dev_os.skills import DebuggingSkill, PerformanceOptimizationSkill, DocumentationGenerationSkill
+
+from ai_dev_os.skills import (
+    DebuggingSkill,
+    DocumentationGenerationSkill,
+    PerformanceOptimizationSkill,
+)
+
 
 @pytest.mark.asyncio
 async def test_debugging_skill():
@@ -8,12 +14,14 @@ async def test_debugging_skill():
     assert result["status"] == "success"
     assert "analysis" in result
 
+
 @pytest.mark.asyncio
 async def test_performance_skill():
     skill = PerformanceOptimizationSkill()
     result = await skill.execute({})
     assert result["status"] == "success"
     assert len(result["optimizations"]) > 0
+
 
 @pytest.mark.asyncio
 async def test_doc_skill():
