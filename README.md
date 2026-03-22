@@ -278,7 +278,7 @@ cd examples/robot-walker
 python run.py
 ```
 
-See [examples/robot-walker/README.md](examples/robot-walker/README.md) for details.
+See [`examples/robot-walker/README.md`](./examples/robot-walker/README.md) for details.
 
 ### Example 2: Model Fine-tuning
 Fine-tune a model with Unsloth and quantize to BitNet format.
@@ -383,10 +383,10 @@ AI Dev OS is built by the community. To contribute:
 
 1. Fork the repo
 2. Create a feature branch: `git checkout -b feature/your-feature`
-3. Follow [CONTRIBUTING.md](CONTRIBUTING.md)
+3. Follow [CONTRIBUTING.md](./CONTRIBUTING.md)
 4. Submit a PR
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed guidelines.
 
 ## 📝 License
 

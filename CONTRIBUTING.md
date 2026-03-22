@@ -6,7 +6,7 @@ Welcome! We are excited that you want to contribute to the AI Dev OS project.
 
 1. Fork the repository.
 2. Create a feature branch: `feature/your-feature-name`.
-3. Follow the rules in `AGENTS.md` (mandatory).
+3. Follow the rules in [AGENTS.md](./AGENTS.md) (mandatory).
 4. Implement your changes using TDD.
 5. Ensure all tests pass: `uv run pytest`.
 6. Submit a Pull Request.
