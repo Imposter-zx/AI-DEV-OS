@@ -183,7 +183,7 @@ class TestAIDevOSOrchestrator:
     @patch("ai_dev_os.core.Anthropic")
     def test_skills_loaded(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
-        assert len(orchestrator.skills) == 3
+        assert len(orchestrator.skills) == 6
         for name, skill in orchestrator.skills.items():
             assert isinstance(skill, SuperpowerSkill)
             assert skill.name == name

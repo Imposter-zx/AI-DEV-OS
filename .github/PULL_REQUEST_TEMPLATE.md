@@ -1,22 +1,24 @@
+# Pull Request Template
+
 ## Description
-Please include a summary of the change and which issue is fixed.
+Provide a clear summary of the changes and the problem being solved.
 
-Fixes # (issue)
+## Related Issues
+Fixes # (issue number)
 
-## Type of change
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
 
-## How Has This Been Tested?
-Please describe the tests that you ran to verify your changes.
-- [ ] Added/Updated Unit Tests
-- [ ] Tested locally with `uv run pytest`
+## Checklist
+- [ ] I have followed the `AGENTS.md` rules.
+- [ ] My code follows the project style (black/isort).
+- [ ] I have added tests that prove my fix is effective or that my feature works.
+- [ ] New and existing unit tests pass locally.
+- [ ] I have updated the documentation.
+- [ ] Coverage is >= 90% for new code.
 
-## Checklist:
-- [ ] My code follows the style guidelines of this project (`uv run black`, `uv run isort`)
-- [ ] I have performed a self-review of my own code
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] My changes generate no new warnings/linting errors (passed `uv run flake8`, `uv run mypy`)
-- [ ] New and existing unit tests pass locally with my changes
+## Screenshots (if applicable)
+Add screenshots or recordings here.

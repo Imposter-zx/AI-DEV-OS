@@ -16,6 +16,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 from anthropic import Anthropic
 from langgraph.graph import END, START, StateGraph
 
+from ai_dev_os.sandbox import SandboxProvider
+from ai_dev_os.utils.context import ContextManager
+from ai_dev_os.utils.error_handling import with_retry
+from ai_dev_os.utils.snapshot import SnapshotManager
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -29,15 +34,6 @@ class WorkflowPhase(Enum):
     EXECUTION = "execution"
     VALIDATION = "validation"
     MERGE = "merge"
-
-
-class SandboxProvider(Enum):
-    """Supported sandbox providers."""
-
-    MODAL = "modal"
-    DAYTONA = "daytona"
-    RUNLOOP = "runloop"
-    DOCKER = "docker"
 
 
 @dataclass
@@ -102,10 +98,17 @@ class WorkflowState:
 class SuperpowerSkill:
     """Wrapper for Superpowers skills."""
 
-    def __init__(self, name: str, trigger: str, system_prompt: str):
+    def __init__(
+        self,
+        name: str,
+        trigger: str,
+        system_prompt: str,
+        context_manager: Optional[ContextManager] = None,
+    ):
         self.name = name
         self.trigger = trigger
         self.system_prompt = system_prompt
+        self.context_manager = context_manager or ContextManager()
         import os
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -115,6 +118,7 @@ class SuperpowerSkill:
             )
         self.client = Anthropic(api_key=api_key)
 
+    @with_retry(max_retries=3)
     async def execute(self, state: WorkflowState) -> str:
         """Execute the skill against the current state with caching."""
         prompt = f"""
@@ -151,19 +155,32 @@ Generate output for this skill:
 
         state.add_log(f"Executing skill: {self.name}")
 
+        # Track input tokens
+        in_tokens = self.context_manager.count_tokens(prompt) + self.context_manager.count_tokens(
+            self.system_prompt
+        )
+
         response = self.client.messages.create(
-            model="claude-opus-4-20250514",
+            model="claude-3-5-sonnet-20240620",
             max_tokens=4096,
+            system=self.system_prompt,
             messages=[{"role": "user", "content": prompt}],
         )
 
         result = response.content[0].text
+        out_tokens = response.usage.output_tokens
+
+        # Track usage in context manager
+        self.context_manager.track_usage(state.id, self.name, in_tokens + out_tokens)
+
+        # Update state percentage (assuming 200k limit for Claude 3.5 Sonnet)
+        state.context_usage = self.context_manager.get_usage_percentage(state.id, 200000)
 
         # Save cache
         with open(cache_file, "w") as f:
             json.dump({"result": result}, f)
 
-        state.add_log(f"Skill {self.name} completed, tokens used: {response.usage.output_tokens}")
+        state.add_log(f"Skill {self.name} completed, tokens: {in_tokens} in / {out_tokens} out")
 
         return result
 
@@ -198,8 +215,13 @@ class ClaudeHUDIntegration:
 class SubagentOrchestrator:
     """Orchestrates parallel subagent execution."""
 
-    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+    def __init__(
+        self,
+        sandbox_provider: SandboxProvider = SandboxProvider.MODAL,
+        context_manager: Optional[ContextManager] = None,
+    ):
         self.sandbox_provider = sandbox_provider
+        self.context_manager = context_manager or ContextManager()
         import os
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -210,6 +232,7 @@ class SubagentOrchestrator:
         self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
 
+    @with_retry(max_retries=3)
     async def spawn_agent(self, config: AgentConfig, task_description: str) -> str:
         """Spawn a subagent to handle a specific task."""
 
@@ -234,10 +257,13 @@ Task:
 {task_description}
 """
 
-        logger.info(f"Spawning subagent: {config.name} (role: {config.role})")
+        # Track input tokens
+        in_tokens = self.context_manager.count_tokens(
+            system_prompt
+        ) + self.context_manager.count_tokens("Begin execution.")
 
         response = self.client.messages.create(
-            model="claude-opus-4-20250514",
+            model="claude-3-5-sonnet-20240620",
             max_tokens=config.max_tokens,
             temperature=config.temperature,
             system=system_prompt,
@@ -245,7 +271,12 @@ Task:
         )
 
         result = response.content[0].text
-        logger.info(f"Subagent {config.name} completed")
+        out_tokens = response.usage.output_tokens
+
+        # Track usage
+        self.context_manager.track_usage("workflow-dummy", config.name, in_tokens + out_tokens)
+
+        logger.info(f"Subagent {config.name} completed, tokens: {in_tokens} in / {out_tokens} out")
 
         return result
 
@@ -340,11 +371,14 @@ class AIDevOSOrchestrator:
         self.client = Anthropic(api_key=api_key)
         self.hud = ClaudeHUDIntegration()
 
+        # Context manager
+        self.context_manager = ContextManager()
+
         # Initialize Superpowers skills
         self.skills = self._load_skills()
 
         # Subagent orchestrator
-        self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider)
+        self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider, self.context_manager)
 
         # Load AGENTS.md rules
         self.agents_rules = self._load_agents_rules()
@@ -360,6 +394,7 @@ You are a brainstorming expert. Help refine the user's idea through Socratic que
 Ask clarifying questions, explore alternatives, and present the design in digestible chunks.
 Output: A clear design document with requirements, architecture, and acceptance criteria.
 """,
+                context_manager=self.context_manager,
             ),
             "planning": SuperpowerSkill(
                 name="planning",
@@ -369,6 +404,7 @@ You are a project planning expert. Break the design into bite-sized tasks (2-5 m
 Each task must include: exact file paths, complete code snippets, and verification steps.
 Output: A detailed implementation plan with task list and dependencies.
 """,
+                context_manager=self.context_manager,
             ),
             "code-review": SuperpowerSkill(
                 name="code-review",
@@ -378,6 +414,34 @@ You are a code reviewer. Check the implementation against the plan.
 Report issues by severity: critical (blocks merge), major (should fix), minor (nice to have).
 Output: Review report with issues and recommendations.
 """,
+                context_manager=self.context_manager,
+            ),
+            "research": SuperpowerSkill(
+                name="research",
+                trigger="Discovery",
+                system_prompt="""
+You are a research expert. Search the codebase for patterns, anti-patterns, and architectural constraints.
+Output: A research report with findings and cross-references to relevant files.
+""",
+                context_manager=self.context_manager,
+            ),
+            "security-audit": SuperpowerSkill(
+                name="security-audit",
+                trigger="Safety Check",
+                system_prompt="""
+You are a security professional. Scan the codebase for leaked secrets, insecure dependencies, and common vulnerabilities.
+Output: A list of security findings with severity and remediation steps.
+""",
+                context_manager=self.context_manager,
+            ),
+            "performance-optimization": SuperpowerSkill(
+                name="performance-optimization",
+                trigger="Efficiency",
+                system_prompt="""
+You are a performance engineer. Profile the system to find bottlenecks, memory leaks, and slow database queries. 
+Output: A performance report with specific optimization recommendations.
+""",
+                context_manager=self.context_manager,
             ),
         }
 
@@ -414,6 +478,7 @@ Output: Review report with issues and recommendations.
 
         state.add_log(f"Starting workflow for request: {user_request}")
         self.hud.update(state, state.context_usage, [])
+        self._save_snapshot(state)
 
         # Phase 1: Brainstorming
         logger.info("=" * 60)
@@ -423,6 +488,7 @@ Output: Review report with issues and recommendations.
         design_doc = await self.skills["brainstorming"].execute(state)
         state.design_doc = design_doc
         state.add_log("Design doc generated")
+        self._save_snapshot(state)
 
         print("\n📋 DESIGN DOCUMENT:\n")
         print(design_doc)
@@ -442,47 +508,70 @@ Output: Review report with issues and recommendations.
         logger.info("=" * 60)
 
         state.phase = WorkflowPhase.PLANNING
+        self._save_snapshot(state)
         plan = await self.skills["planning"].execute(state)
         state.implementation_plan = plan
         state.add_log("Implementation plan generated")
+        self._save_snapshot(state)
 
         print("\n📝 IMPLEMENTATION PLAN:\n")
         print(plan)
         print("\n" + "=" * 60)
 
-        # Phase 3: Execution (Subagents)
+        # Phase 4: Execution (Subagents)
         logger.info("=" * 60)
-        logger.info("PHASE 3: EXECUTION (Subagents)")
+        logger.info("PHASE 4: EXECUTION (Subagents)")
         logger.info("=" * 60)
 
         # Determine which agents we need
         state.subagent_configs = self._determine_agents(user_request)
 
         state = await self.subagent_orchestrator.orchestrate(state)
+        self._save_snapshot(state)
 
-        # Phase 4: Validation & Code Review
+        # Phase 5: Validation & Code Review
         logger.info("=" * 60)
-        logger.info("PHASE 4: VALIDATION & CODE REVIEW")
+        logger.info("PHASE 5: VALIDATION & CODE REVIEW")
         logger.info("=" * 60)
 
         state.phase = WorkflowPhase.VALIDATION
         review = await self.skills["code-review"].execute(state)
         state.add_log("Code review completed")
+        self._save_snapshot(state)
 
         print("\n✅ CODE REVIEW:\n")
         print(review)
 
-        # Phase 5: Merge (in production, this auto-creates PR)
+        # Phase 6: Merge
         logger.info("=" * 60)
-        logger.info("PHASE 5: MERGE")
+        logger.info("PHASE 6: MERGE")
         logger.info("=" * 60)
 
         state.phase = WorkflowPhase.MERGE
         state.add_log("Workflow completed successfully")
+        self._save_snapshot(state)
 
         print("\n🎉 Workflow completed! PR ready for review.")
 
         return state
+
+    def _save_snapshot(self, state: WorkflowState):
+        """Helper to save a state snapshot."""
+        try:
+            # Convert dataclass to dict (simplified)
+            state_dict = {
+                "id": state.id,
+                "phase": state.phase.value,
+                "user_request": state.user_request,
+                "design_doc": state.design_doc,
+                "implementation_plan": state.implementation_plan,
+                "execution_results": state.execution_results,
+                "created_at": state.created_at,
+                "logs": state.logs,
+            }
+            self.snapshot_manager.save_snapshot(state.id, state.phase.value, state_dict)
+        except Exception as e:
+            logger.error(f"Failed to save snapshot: {e}")
 
     def _determine_agents(self, user_request: str) -> List[AgentConfig]:
         """Determine which agents are needed for this request."""
