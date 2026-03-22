@@ -1,15 +1,24 @@
 # Contributing to AI Dev OS
 
-First off, thanks for taking the time to contribute! 🎉
+Welcome! We are excited that you want to contribute to the AI Dev OS project.
 
-## Development Process
+## Workflow
 
-1. **Fork** the repository and clone it to your local machine.
-2. **Branch**: Create a feature branch `git checkout -b feature/your-feature-name`.
-3. **Commit**: Make sure to test your code. See the testing section.
-4. **Push**: Submit a Pull Request.
+1. Fork the repository.
+2. Create a feature branch: `feature/your-feature-name`.
+3. Follow the rules in `AGENTS.md` (mandatory).
+4. Implement your changes using TDD.
+5. Ensure all tests pass: `uv run pytest`.
+6. Submit a Pull Request.
 
-## Rules
-- You MUST follow the core rules outlined in `AGENTS.md`.
-- Test-Driven Development (TDD) is required for any logic change. 
-- Ensure you run `black`, `isort`, and `mypy` before submitting your PR.
+## Code Style
+- Use `black` for formatting.
+- Use `isort` for imports.
+- Maintain 90%+ test coverage for new code.
+
+## Submitting a PR
+Your PR must include:
+- A clear description of changes.
+- Reference to any related issues.
+- Updated documentation.
+- All tests green.

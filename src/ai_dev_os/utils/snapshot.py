@@ -1,0 +1,50 @@
+import json
+import logging
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
+
+
+class SnapshotManager:
+    """
+    Manages recovery snapshots for AI Dev OS workflows.
+    """
+
+    def __init__(self, base_dir: Optional[Path] = None):
+        if base_dir is None:
+            self.base_dir = Path.home() / ".ai-dev-os" / "snapshots"
+        else:
+            self.base_dir = base_dir
+
+        self.base_dir.mkdir(parents=True, exist_ok=True)
+
+    def save_snapshot(self, workflow_id: str, phase: str, state_dict: Dict[str, Any]) -> Path:
+        """
+        Save a workflow state snapshot.
+        """
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        filename = f"wf_{workflow_id}_{phase}_{timestamp}.json"
+        snapshot_path = self.base_dir / filename
+
+        with open(snapshot_path, "w") as f:
+            json.dump(state_dict, f, indent=2)
+
+        logger.info(f"Snapshot saved: {snapshot_path}")
+        return snapshot_path
+
+    def load_latest_snapshot(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Load the most recent snapshot for a workflow.
+        """
+        snapshots = sorted(self.base_dir.glob(f"wf_{workflow_id}_*.json"), reverse=True)
+        if not snapshots:
+            return None
+
+        with open(snapshots[0], "r") as f:
+            return json.load(f)
+
+    def list_snapshots(self, workflow_id: str) -> list[Path]:
+        """List all snapshots for a specific workflow."""
+        return sorted(self.base_dir.glob(f"wf_{workflow_id}_*.json"))

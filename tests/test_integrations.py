@@ -21,7 +21,7 @@ sys.modules["httpx"] = MagicMock()
 
 @pytest.mark.asyncio
 async def test_slack_webhook():
-    from integrations.slack import SlackIntegration
+    from ai_dev_os.integrations.slack import SlackIntegration
 
     slack = SlackIntegration("dummy_token")
     # Simulate an incoming message event
@@ -36,7 +36,7 @@ async def test_slack_webhook():
 
 @pytest.mark.asyncio
 async def test_linear_webhook():
-    from integrations.linear import LinearIntegration
+    from ai_dev_os.integrations.linear import LinearIntegration
 
     linear = LinearIntegration("dummy_secret")
     payload = {"action": "create", "data": {"id": "ISSUE-1", "title": "Fix the bug in production"}}
@@ -49,9 +49,9 @@ async def test_linear_webhook():
 
 @pytest.mark.asyncio
 async def test_github_webhook():
-    from integrations.github import GithubIntegration
+    from ai_dev_os.integrations.github import GitHubIntegration
 
-    github = GithubIntegration("dummy_secret")
+    github = GitHubIntegration("dummy_secret")
     payload = {
         "action": "created",
         "issue": {"number": 1},

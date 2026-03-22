@@ -2,26 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
-## [Unreleased]
-
+## [1.1.0] - 2026-03-22
 ### Added
-- **Web Dashboard**: Streamlit interface to monitor agents and workflows.
-- **Monitoring**: Prometheus metrics wrapper.
-- **Integrations**: Slack, Linear, and GitHub OAuth integrations.
-- **Core Tests**: Comprehensive test suite covering orchestrator and workflows.
-- **Real Training**: Unsloth fine-tuning via `SFTTrainer`.
-- **Real Inference**: CPU-optimized `llama-cpp` BitNet inference.
-- **CI/CD**: Expanded GitHub Actions using `uv`.
-- **Simulation**: Support for Newton physics simulations.
-- **Templates**: Add bug/feature reporting templates and PR guidelines.
-- **Security**: Added `SECURITY.md`.
+- GitHub Integration (OAuth, PRs, Commits).
+- Slack Bot (Threads, Interactive, Slash).
+- Linear Integration (Issue creation, Status updates).
+- Error Recovery (Snapshots, Retries).
+- Advanced Superpowers Skills (Research, Audit, Optimization).
+- Advanced Context Management (Token tracking, Summarization).
+- Daytona Sandbox Integration.
+- Comprehensive Testing Suite (50+ tests).
 
-### Changed
-- Migrated dependency management from `requirements.txt` to `pyproject.toml` (via `uv`).
-- Standardized imports, removing `sys.path` injection hacks.
-
-### Fixed
-- Logging configuration compatibility across different `python-json-logger` versions.
+## [1.0.0] - 2024-01-01
+### Initial Release
+- Core orchestrator engine.
+- Modal and Docker sandbox support.
+- Basic brainstorming and planning skills.

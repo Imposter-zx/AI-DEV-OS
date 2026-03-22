@@ -1,0 +1,92 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.0, pytest-9.0.2, pluggy-1.6.0
+rootdir: C:\Users\HASSA\Desktop\AI-DEV-OS
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.12.1, langsmith-0.7.22, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 76 items
+
+tests\test_context_manager.py ....                                       [  5%]
+tests\test_core.py ...                                                   [  9%]
+tests\test_core_comprehensive.py .....................                   [ 36%]
+tests\test_core_snapshot.py ..                                           [ 39%]
+tests\test_daytona.py ..                                                 [ 42%]
+tests\test_github_real.py ....                                           [ 47%]
+tests\test_integrations.py ...                                           [ 51%]
+tests\test_linear_comprehensive.py ....                                  [ 56%]
+tests\test_models.py ..                                                  [ 59%]
+tests\test_monitoring.py ....                                            [ 64%]
+tests\test_sandbox.py ..                                                 [ 67%]
+tests\test_sandbox_advanced.py ....                                      [ 72%]
+tests\test_security.py ....                                              [ 77%]
+tests\test_skills.py ...                                                 [ 81%]
+tests\test_skills_advanced.py ...                                        [ 85%]
+tests\test_slack_bot.py ...                                              [ 89%]
+tests\test_snapshot.py ....                                              [ 94%]
+tests\test_utils.py ....                                                 [100%]
+
+============================== warnings summary ===============================
+tests/test_core.py: 1 warning
+tests/test_core_comprehensive.py: 6 warnings
+tests/test_core_snapshot.py: 2 warnings
+tests/test_skills_advanced.py: 2 warnings
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:93: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.created_at = datetime.utcnow().isoformat()
+
+tests/test_core.py: 1 warning
+tests/test_core_comprehensive.py: 2 warnings
+tests/test_core_snapshot.py: 19 warnings
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:97: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.logs.append(f"[{datetime.utcnow().isoformat()}] {message}")
+
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_creates_file
+tests/test_core_comprehensive.py::TestClaudeHUDIntegration::test_hud_update_empty_agents
+tests/test_core_snapshot.py::test_run_generates_snapshots
+tests/test_core_snapshot.py::test_run_generates_snapshots
+tests/test_core_snapshot.py::test_run_generates_snapshots
+tests/test_core_snapshot.py::test_retry_on_api_failure
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\core.py:193: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "timestamp": datetime.utcnow().isoformat(),
+
+tests/test_integrations.py::test_github_webhook
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\integrations\github.py:29: DeprecationWarning: Argument login_or_token is deprecated, please use auth=github.Auth.Token(...) instead
+    self.client = Github(token) if HAS_GITHUB else None
+
+tests/test_snapshot.py::test_save_snapshot_creates_file
+tests/test_snapshot.py::test_load_latest_snapshot
+tests/test_snapshot.py::test_load_latest_snapshot
+tests/test_snapshot.py::test_list_snapshots
+tests/test_snapshot.py::test_list_snapshots
+  C:\Users\HASSA\Desktop\AI-DEV-OS\src\ai_dev_os\utils\snapshot.py:26: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=============================== tests coverage ================================
+_______________ coverage: platform win32, python 3.12.0-final-0 _______________
+
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+src\ai_dev_os\__init__.py                    0      0   100%
+src\ai_dev_os\agents.py                      0      0   100%
+src\ai_dev_os\core.py                      275     29    89%   113, 150-151, 220, 296-298, 357, 442-443, 562-563, 605-639, 643
+src\ai_dev_os\hud.py                         0      0   100%
+src\ai_dev_os\integrations\__init__.py       0      0   100%
+src\ai_dev_os\integrations\github.py        56     18    68%   15-17, 27, 34-35, 43-45, 57, 63-65, 70, 77-79, 90
+src\ai_dev_os\integrations\linear.py        41      1    98%   14
+src\ai_dev_os\integrations\slack.py         34     10    71%   16, 38-40, 46-50, 65
+src\ai_dev_os\models.py                    194    114    41%   72-73, 95-97, 106, 117-152, 185-187, 191-210, 214-232, 239-241, 245-266, 275-293, 299-311, 318-319, 323-337, 341-343, 347-351, 355-363, 371-380, 385-389
+src\ai_dev_os\monitoring_metrics.py         43     43     0%   7-107
+src\ai_dev_os\sandbox.py                   250    147    41%   70, 78, 83, 88, 93, 106-133, 147-150, 154-160, 164-170, 174-180, 187-189, 193-201, 205-210, 214-220, 224-229, 233-241, 249-277, 281-295, 299-316, 320-332, 336-344, 360-368, 373, 379-380, 416
+src\ai_dev_os\simulation.py                 77     77     0%   7-147
+src\ai_dev_os\skills.py                     22      0   100%
+src\ai_dev_os\utils\__init__.py              0      0   100%
+src\ai_dev_os\utils\context.py              29      4    86%   15-17, 25
+src\ai_dev_os\utils\daytona.py              32      8    75%   34-35, 39-42, 48-49
+src\ai_dev_os\utils\error_handling.py       21      0   100%
+src\ai_dev_os\utils\monitoring.py           39      4    90%   57-60
+src\ai_dev_os\utils\security.py             35      3    91%   22, 33-34
+src\ai_dev_os\utils\snapshot.py             28      1    96%   16
+----------------------------------------------------------------------
+TOTAL                                     1176    459    61%
+====================== 76 passed, 45 warnings in 11.48s =======================
