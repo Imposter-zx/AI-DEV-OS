@@ -77,21 +77,10 @@ class UnslothTrainer:
                     load_in_4bit=self.config.quantization.value == "int4",
                 )
             except ImportError:
-                logger.warning("Unsloth not installed. Simulating loading.")
-                await asyncio.sleep(1)
-
-            self.training_logs.append(
-                {
-                    "stage": "setup",
-                    "status": "success",
-                    "model": self.config.model_name,
-                    "quantization": self.config.quantization.value,
-                }
-            )
-
-            logger.info("Unsloth trainer ready")
-            return True
-
+                error_msg = "Unsloth is not installed. Real execution requires Unsloth and compatible CUDA hardware. Install with: pip install unsloth[cu121]"
+                logger.error(error_msg)
+                self.status = "error"
+                raise RuntimeError(error_msg)
         except Exception as e:
             logger.error(f"Setup failed: {str(e)}")
             return False
@@ -162,18 +151,9 @@ class UnslothTrainer:
                 }
 
             except ImportError:
-                logger.warning("Unsloth/transformers not installed. Using simulated training.")
-                await asyncio.sleep(1)
-                metrics = {
-                    "final_loss": 1.234,
-                    "train_loss_history": [2.5, 2.1, 1.8, 1.5, 1.3, 1.234],
-                    "validation_loss": 1.456,
-                    "perplexity": 3.43,
-                    "training_time_minutes": 45,
-                    "peak_vram_gb": 8.2,
-                    "speedup_vs_standard": 2.15,
-                    "vram_reduction_percent": 68.5,
-                }
+                error_msg = "Unsloth/transformers not installed. Cannot proceed with real training."
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
             self.training_logs.append({"stage": "training", "status": "success", **metrics})
 
@@ -217,12 +197,19 @@ class UnslothTrainer:
             output_path = Path(path) / "bitnet_model.gguf"
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
-            # In production, use bitnet.cpp conversion utilities
-            # For now, simulate
-            await asyncio.sleep(2)
-
-            # Create dummy GGUF file
-            output_path.touch()
+            # In production, use bitnet.cpp or llama.cpp convert script utilities
+            import subprocess
+            import shutil
+            
+            convert_script = shutil.which("llama.cpp/convert.py")
+            if not convert_script:
+                raise NotImplementedError("llama.cpp/convert.py not found in PATH. Real quantization requires llama.cpp installed locally.")
+                
+            cmd = f"python {convert_script} --outfile {output_path} --outtype q4_0 {path}"
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            
+            if result.returncode != 0:
+                raise RuntimeError(f"Quantization script failed: {result.stderr}")
 
             logger.info(f"BitNet model saved to {output_path}")
             return True
@@ -255,8 +242,9 @@ class BitNetInference:
                     verbose=False,
                 )
             except ImportError:
-                logger.warning("llama_cpp not installed. Simulating BitNet inference loading.")
-                await asyncio.sleep(0.5)
+                error_msg = "llama_cpp not installed. Real BitNet inference requires llama-cpp-python. Install with: pip install llama-cpp-python"
+                logger.error(error_msg)
+                raise RuntimeError(error_msg)
 
             logger.info("Model loaded successfully")
             return True
@@ -278,13 +266,15 @@ class BitNetInference:
 
             logger.info(f"Running inference: {prompt[:50]}...")
 
-            if hasattr(self.model, "create_completion"):
-                output = self.model.create_completion(
-                    prompt, max_tokens=max_tokens, temperature=temperature, top_p=top_p
-                )["choices"][0]["text"]
-            else:
-                await asyncio.sleep(0.1)  # Simulate inference time
-                output = f"[BitNet inference result for: {prompt[:20]}...]"
+            # llama_cpp.Llama object is callable for completions
+            response = self.model(
+                prompt,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p
+            )
+            
+            output = response["choices"][0]["text"]
 
             return True, output
 

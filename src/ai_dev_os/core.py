@@ -36,6 +36,51 @@ class WorkflowPhase(Enum):
     MERGE = "merge"
 
 
+from abc import ABC, abstractmethod
+
+class BaseLLM(ABC):
+    @abstractmethod
+    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+        pass
+
+class AnthropicLLM(BaseLLM):
+    def __init__(self):
+        import os
+        from anthropic import Anthropic
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise ValueError("ANTHROPIC_API_KEY environment variable is missing.")
+        self.client = Anthropic(api_key=api_key)
+        
+    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+        response = self.client.messages.create(
+            model="claude-3-5-sonnet-20240620",
+            max_tokens=max_tokens,
+            temperature=temperature,
+            system=system,
+            messages=messages,
+        )
+        return response.content[0].text, response.usage.input_tokens, response.usage.output_tokens
+
+class LocalLLM(BaseLLM):
+    def __init__(self, model_path: str):
+        try:
+            from llama_cpp import Llama
+            self.model = Llama(model_path=model_path, n_ctx=8192, verbose=False)
+        except ImportError:
+            raise RuntimeError("llama-cpp-python is required for LocalLLM")
+            
+    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+        prompt = f"<system>\n{system}\n</system>\n"
+        for m in messages:
+            prompt += f"<{m['role']}>\n{m['content']}\n</{m['role']}>\n"
+        prompt += "<assistant>\n"
+        
+        response = self.model(prompt, max_tokens=max_tokens, temperature=temperature)
+        text = response["choices"][0]["text"]
+        return text, len(prompt) // 4, len(text) // 4
+
+
 @dataclass
 class AgentConfig:
     """Configuration for a subagent."""
@@ -104,19 +149,13 @@ class SuperpowerSkill:
         trigger: str,
         system_prompt: str,
         context_manager: Optional[ContextManager] = None,
+        llm_provider: Optional[BaseLLM] = None,
     ):
         self.name = name
         self.trigger = trigger
         self.system_prompt = system_prompt
         self.context_manager = context_manager or ContextManager()
-        import os
-
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing. Cannot start SuperpowerSkill."
-            )
-        self.client = Anthropic(api_key=api_key)
+        self.llm = llm_provider or AnthropicLLM()
 
     @with_retry(max_retries=3)
     async def execute(self, state: WorkflowState) -> str:
@@ -160,15 +199,15 @@ Generate output for this skill:
             self.system_prompt
         )
 
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20240620",
-            max_tokens=4096,
+        # Execute via agnostic LLM provider
+        result, in_t, out_t = self.llm.generate(
             system=self.system_prompt,
             messages=[{"role": "user", "content": prompt}],
+            max_tokens=4096,
         )
 
-        result = response.content[0].text
-        out_tokens = response.usage.output_tokens
+        in_tokens += in_t
+        out_tokens = out_t
 
         # Track usage in context manager
         self.context_manager.track_usage(state.id, self.name, in_tokens + out_tokens)
@@ -219,22 +258,38 @@ class SubagentOrchestrator:
         self,
         sandbox_provider: SandboxProvider = SandboxProvider.MODAL,
         context_manager: Optional[ContextManager] = None,
+        llm_provider: Optional[BaseLLM] = None,
     ):
         self.sandbox_provider = sandbox_provider
         self.context_manager = context_manager or ContextManager()
-        import os
-
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing."
-            )
-        self.client = Anthropic(api_key=api_key)
+        self.llm = llm_provider or AnthropicLLM()
         self.hud = ClaudeHUDIntegration()
+        self.hud = ClaudeHUDIntegration()
+
+    def _execute_tool(self, tool_name: str, args: Dict[str, Any]) -> str:
+        """Bind strings to actual python executions."""
+        try:
+            if tool_name == "read_file":
+                with open(args["path"], "r", encoding="utf-8") as f:
+                    return f.read()
+            elif tool_name == "write_file":
+                import os
+                os.makedirs(os.path.dirname(args["path"]), exist_ok=True)
+                with open(args["path"], "w", encoding="utf-8") as f:
+                    f.write(args["content"])
+                return f"Successfully wrote to {args['path']}"
+            elif tool_name == "execute":
+                import subprocess
+                res = subprocess.run(args["command"], shell=True, capture_output=True, text=True)
+                return f"Exit: {res.returncode}\nOut: {res.stdout}\nErr: {res.stderr}"
+            else:
+                return f"Tool {tool_name} not implemented."
+        except Exception as e:
+            return f"Error executing {tool_name}: {str(e)}"
 
     @with_retry(max_retries=3)
     async def spawn_agent(self, config: AgentConfig, task_description: str) -> str:
-        """Spawn a subagent to handle a specific task."""
+        """Spawn a subagent to handle a specific task with tool use."""
 
         tools_str = "\n".join([f"- {tool}" for tool in config.tools])
 
@@ -253,32 +308,61 @@ Guidelines:
 4. Handle errors gracefully
 5. Provide clear output for downstream tasks
 
+To use a tool, you must output a JSON block like this exactly once per message:
+```json
+{{"tool": "execute", "args": {{"command": "echo 'hello'"}}}}
+```
+I will run the tool and supply the output. You may use tools continuously until you are finished. Then provide your final answer without a tool block.
+
 Task:
 {task_description}
 """
 
-        # Track input tokens
-        in_tokens = self.context_manager.count_tokens(
-            system_prompt
-        ) + self.context_manager.count_tokens("Begin execution.")
+        messages = [{"role": "user", "content": "Begin execution."}]
+        total_in, total_out = 0, 0
+        final_result = ""
 
-        response = self.client.messages.create(
-            model="claude-3-5-sonnet-20240620",
-            max_tokens=config.max_tokens,
-            temperature=config.temperature,
-            system=system_prompt,
-            messages=[{"role": "user", "content": "Begin execution."}],
-        )
+        import re
+        import json
 
-        result = response.content[0].text
-        out_tokens = response.usage.output_tokens
+        for step in range(5):  # Max iterations
+            text, in_t, out_t = self.llm.generate(
+                system=system_prompt,
+                messages=messages,
+                max_tokens=config.max_tokens,
+                temperature=config.temperature,
+            )
+            total_in += in_t
+            total_out += out_t
+            
+            match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
+            if match:
+                try:
+                    tool_call = json.loads(match.group(1))
+                    tool_name = tool_call.get("tool")
+                    args = tool_call.get("args", {})
+                    
+                    logger.info(f"Agent {config.name} executing tool: {tool_name}")
+                    tool_result = self._execute_tool(tool_name, args)
+                    
+                    messages.append({"role": "assistant", "content": text})
+                    messages.append({"role": "user", "content": f"Tool result:\n{tool_result}\nContinue execution."})
+                except json.JSONDecodeError:
+                    messages.append({"role": "assistant", "content": text})
+                    messages.append({"role": "user", "content": "Failed to parse JSON. Please format correctly."})
+            else:
+                final_result = text
+                break
+
+        if not final_result:
+            final_result = text
 
         # Track usage
-        self.context_manager.track_usage("workflow-dummy", config.name, in_tokens + out_tokens)
+        self.context_manager.track_usage("workflow-dummy", config.name, total_in + total_out)
 
-        logger.info(f"Subagent {config.name} completed, tokens: {in_tokens} in / {out_tokens} out")
+        logger.info(f"Subagent {config.name} completed, tokens: {total_in} in / {total_out} out")
 
-        return result
+        return final_result
 
     async def orchestrate(self, state: WorkflowState) -> WorkflowState:
         """Orchestrate all subagents in parallel."""
@@ -359,16 +443,9 @@ Requirements:
 class AIDevOSOrchestrator:
     """Main orchestrator for the entire AI Dev OS system."""
 
-    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL):
+    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL, llm_provider: Optional[BaseLLM] = None):
         self.sandbox_provider = sandbox_provider
-        import os
-
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: ANTHROPIC_API_KEY environment variable is missing."
-            )
-        self.client = Anthropic(api_key=api_key)
+        self.llm = llm_provider or AnthropicLLM()
         self.hud = ClaudeHUDIntegration()
 
         # Context manager
@@ -378,7 +455,7 @@ class AIDevOSOrchestrator:
         self.skills = self._load_skills()
 
         # Subagent orchestrator
-        self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider, self.context_manager)
+        self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider, self.context_manager, self.llm)
 
         # Load AGENTS.md rules
         self.agents_rules = self._load_agents_rules()

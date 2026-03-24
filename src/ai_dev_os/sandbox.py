@@ -133,16 +133,32 @@ class ModalSandbox(Sandbox):
             raise
 
     async def execute(self, command: str, cwd: str = "/workspace") -> Tuple[int, str, str]:
-        """Execute command in Modal."""
+        """Execute command in Modal using an actual remote function."""
         try:
-            # In production, use modal.run to execute
-            # For now, return mock response
+            import modal
+            
             self.add_log(f"Executing: {command}")
 
-            # Mock execution
-            await asyncio.sleep(0.5)
+            # Define a throwaway modal function to execute the command natively
+            @self.app.function()
+            def run_remote_command(cmd: str, work_dir: str):
+                import subprocess
+                import os
+                
+                # Ensure workspace exists
+                os.makedirs(work_dir, exist_ok=True)
+                
+                result = subprocess.run(
+                    cmd, shell=True, cwd=work_dir, capture_output=True, text=True
+                )
+                return result.returncode, result.stdout, result.stderr
 
-            return (0, f"[mock] {command} completed", "")
+            # Execute via modal remote
+            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+                exit_code, stdout, stderr = run_remote_command.remote(command, cwd)
+
+            self.add_log(f"Execution complete with exit code: {exit_code}")
+            return (exit_code, stdout, stderr)
 
         except Exception as e:
             self.status = SandboxStatus.ERROR
@@ -150,20 +166,57 @@ class ModalSandbox(Sandbox):
             return (1, "", str(e))
 
     async def upload_file(self, local_path: str, remote_path: str) -> bool:
-        """Upload file to Modal sandbox."""
+        """Upload file to Modal sandbox via remote function."""
         try:
+            import modal
+            import pathlib
+            
             self.add_log(f"Uploading {local_path} to {remote_path}")
-            # In production, use modal file mounting
-            return True
+            
+            local_file = pathlib.Path(local_path)
+            if not local_file.exists():
+                raise FileNotFoundError(f"Local file not found: {local_path}")
+            
+            file_data = local_file.read_bytes()
+
+            @self.app.function()
+            def write_remote_file(r_path: str, data: bytes):
+                import os
+                os.makedirs(os.path.dirname(r_path), exist_ok=True)
+                with open(r_path, 'wb') as f:
+                    f.write(data)
+                return True
+
+            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+                return write_remote_file.remote(remote_path, file_data)
+                
         except Exception as e:
             self.add_log(f"Upload failed: {str(e)}")
             return False
 
     async def download_file(self, remote_path: str, local_path: str) -> bool:
-        """Download file from Modal sandbox."""
+        """Download file from Modal sandbox via remote function."""
         try:
+            import modal
+            import pathlib
+            
             self.add_log(f"Downloading {remote_path} to {local_path}")
-            # In production, retrieve from Modal
+
+            @self.app.function()
+            def read_remote_file(r_path: str):
+                import os
+                if not os.path.exists(r_path):
+                    raise FileNotFoundError(f"Remote file not found: {r_path}")
+                with open(r_path, 'rb') as f:
+                    return f.read()
+
+            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+                file_data = read_remote_file.remote(remote_path)
+                
+            local_file = pathlib.Path(local_path)
+            local_file.parent.mkdir(parents=True, exist_ok=True)
+            local_file.write_bytes(file_data)
+            
             return True
         except Exception as e:
             self.add_log(f"Download failed: {str(e)}")
@@ -282,13 +335,25 @@ class DockerSandbox(Sandbox):
         try:
             self.add_log(f"Executing: {command}")
 
+            # run executes command and returns ExitCode, bytes output. 
+            # To get stderr we have to use demux=True, but exec_run supports it via demux.
             exit_code, output = self.container.exec_run(
-                f"bash -c 'cd {cwd} && {command}'", stdout=True, stderr=True
+                f"bash -c 'cd {cwd} && {command}'", 
+                stdout=True, 
+                stderr=True,
+                demux=True
             )
 
-            stdout = output.decode() if isinstance(output, bytes) else str(output)
+            # demux=True returns (stdout, stderr) tuple
+            if output is not None:
+                out_stream, err_stream = output
+                stdout = out_stream.decode("utf-8") if out_stream else ""
+                stderr = err_stream.decode("utf-8") if err_stream else ""
+            else:
+                stdout = ""
+                stderr = ""
 
-            return (exit_code, stdout, "")
+            return (exit_code, stdout, stderr)
 
         except Exception as e:
             self.status = SandboxStatus.ERROR

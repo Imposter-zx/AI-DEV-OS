@@ -17,8 +17,21 @@ try:
 
     HAS_NEWTON = True
 except ImportError:
-    logger.info("newton_sim not installed. Simulation will be mocked.")
     HAS_NEWTON = False
+
+class ObservationSpace:
+    """Base interface for RL observation spaces."""
+    def __init__(self, shape: tuple):
+        self.shape = shape
+
+class ActionSpace:
+    """Base interface for RL action spaces."""
+    def __init__(self, shape: tuple):
+        self.shape = shape
+    
+    def sample(self):
+        raise NotImplementedError
+
 
 
 @dataclass
@@ -63,17 +76,17 @@ class NewtonSimulation:
     async def setup(self) -> bool:
         """Initialize the simulation environment."""
         try:
-            if HAS_NEWTON:
-                self.environment = newton_sim.Environment(
-                    robot=self.config.robot_type,
-                    terrain=self.config.terrain,
-                    gpu_id=self.config.gpu_id,
-                )
-                logger.info(
-                    f"Newton environment ready: {self.config.robot_type} on {self.config.terrain}"
-                )
-            else:
-                logger.warning("Newton not available. Using mock simulation.")
+            if not HAS_NEWTON:
+                raise RuntimeError("newton_sim is not installed. Real physics simulation requires newton_sim.")
+                
+            self.environment = newton_sim.Environment(
+                robot=self.config.robot_type,
+                terrain=self.config.terrain,
+                gpu_id=self.config.gpu_id,
+            )
+            logger.info(
+                f"Newton environment ready: {self.config.robot_type} on {self.config.terrain}"
+            )
             return True
         except Exception as e:
             logger.error(f"Simulation setup failed: {e}")
@@ -128,20 +141,15 @@ class NewtonSimulation:
 
     async def _run_episode(self, episode_idx: int) -> float:
         """Run a single episode and return the total reward."""
-        if HAS_NEWTON and self.environment:
-            obs = self.environment.reset()
-            total_reward = 0.0
-            for step in range(self.config.max_steps_per_episode):
-                action = self.environment.action_space.sample()
-                obs, reward, done, info = self.environment.step(action)
-                total_reward += reward
-                if done:
-                    break
-            return total_reward
-        else:
-            import random
-
-            await asyncio.sleep(0.001)
-            base = 0.7 + random.random() * 0.3
-            noise = random.gauss(0, 0.05)
-            return max(0.0, min(1.0, base + noise))
+        if not (HAS_NEWTON and self.environment):
+            raise RuntimeError("Simulation environment not initialized.")
+            
+        obs = self.environment.reset()
+        total_reward = 0.0
+        for step in range(self.config.max_steps_per_episode):
+            action = self.environment.action_space.sample()
+            obs, reward, done, info = self.environment.step(action)
+            total_reward += reward
+            if done:
+                break
+        return total_reward

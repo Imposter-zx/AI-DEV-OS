@@ -1,40 +1,57 @@
 ============================= test session starts =============================
-platform win32 -- Python 3.6.8, pytest-7.0.1, pluggy-1.0.0 -- C:\Program Files\Python36\python.exe
+platform win32 -- Python 3.12.0, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\HASSA\Desktop\AI-DEV-OS\.venv\Scripts\python.exe
 cachedir: .pytest_cache
-rootdir: C:\Users\HASSA\Desktop\AI-DEV-OS, configfile: pytest.ini, testpaths: tests
-plugins: anyio-3.6.2, asyncio-0.16.0, mock-3.6.1
-collecting ... collected 7 items / 2 errors / 5 selected
+rootdir: C:\Users\HASSA\Desktop\AI-DEV-OS
+configfile: pyproject.toml
+plugins: anyio-4.12.1, langsmith-0.7.22, asyncio-1.3.0, cov-7.0.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 7 items
 
-=================================== ERRORS ====================================
-_____________________ ERROR collecting tests/test_core.py _____________________
-ImportError while importing test module 'C:\Users\HASSA\Desktop\AI-DEV-OS\tests\test_core.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-C:\Program Files\Python36\lib\importlib\__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-tests\test_core.py:3: in <module>
-    from ai_dev_os.core import AIDevOSOrchestrator, WorkflowState, WorkflowPhase, AgentConfig, SandboxProvider
-src\ai_dev_os\core.py:16: in <module>
-    from langgraph.graph import StateGraph, START, END
-E   ModuleNotFoundError: No module named 'langgraph'
-_________________ ERROR collecting tests/test_integrations.py _________________
-ImportError while importing test module 'C:\Users\HASSA\Desktop\AI-DEV-OS\tests\test_integrations.py'.
-Hint: make sure your test modules/packages have valid Python names.
-Traceback:
-C:\Program Files\Python36\lib\importlib\__init__.py:126: in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-tests\test_integrations.py:2: in <module>
-    from unittest.mock import AsyncMock, MagicMock
-E   ImportError: cannot import name 'AsyncMock'
-============================== warnings summary ===============================
-..\..\AppData\Roaming\Python\Python36\site-packages\_pytest\config\__init__.py:1249
-  C:\Users\HASSA\AppData\Roaming\Python\Python36\site-packages\_pytest\config\__init__.py:1249: PytestConfigWarning: Unknown config option: asyncio_mode
-  
-    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+tests/test_sandbox.py::test_sandbox_config PASSED                        [ 14%]
+tests/test_sandbox.py::test_modal_sandbox_mock FAILED                    [ 28%]
+tests/test_models.py::test_model_config PASSED                           [ 42%]
+tests/test_models.py::test_unsloth_trainer_mock FAILED                   [ 57%]
+tests/test_skills.py::test_debugging_skill FAILED                        [ 71%]
+tests/test_skills.py::test_performance_skill FAILED                      [ 85%]
+tests/test_skills.py::test_doc_skill FAILED                              [100%]
 
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================== FAILURES ===================================
+___________________________ test_modal_sandbox_mock ___________________________
+tests\test_sandbox.py:23: in test_modal_sandbox_mock
+    assert exit_code == 0
+E   assert 1 == 0
+__________________________ test_unsloth_trainer_mock __________________________
+tests\test_models.py:21: in test_unsloth_trainer_mock
+    assert success is True
+E   assert False is True
+------------------------------ Captured log call ------------------------------
+ERROR    ai_dev_os.models:models.py:81 Unsloth is not installed. Real execution requires Unsloth and compatible CUDA hardware. Install with: pip install unsloth[cu121]
+ERROR    ai_dev_os.models:models.py:85 Setup failed: Unsloth is not installed. Real execution requires Unsloth and compatible CUDA hardware. Install with: pip install unsloth[cu121]
+____________________________ test_debugging_skill _____________________________
+tests\test_skills.py:14: in test_debugging_skill
+    assert result["status"] == "success"
+E   AssertionError: assert 'error' == 'success'
+E     
+E     - success
+E     + error
+___________________________ test_performance_skill ____________________________
+tests\test_skills.py:22: in test_performance_skill
+    assert result["status"] == "success"
+E   AssertionError: assert 'error' == 'success'
+E     
+E     - success
+E     + error
+_______________________________ test_doc_skill ________________________________
+tests\test_skills.py:30: in test_doc_skill
+    assert result["status"] == "success"
+E   AssertionError: assert 'error' == 'success'
+E     
+E     - success
+E     + error
 =========================== short test summary info ===========================
-ERROR tests/test_core.py
-ERROR tests/test_integrations.py
-!!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!
-======================== 1 warning, 2 errors in 0.10s =========================
+FAILED tests/test_sandbox.py::test_modal_sandbox_mock - assert 1 == 0
+FAILED tests/test_models.py::test_unsloth_trainer_mock - assert False is True
+FAILED tests/test_skills.py::test_debugging_skill - AssertionError: assert 'e...
+FAILED tests/test_skills.py::test_performance_skill - AssertionError: assert ...
+FAILED tests/test_skills.py::test_doc_skill - AssertionError: assert 'error' ...
+========================= 5 failed, 2 passed in 6.22s =========================
