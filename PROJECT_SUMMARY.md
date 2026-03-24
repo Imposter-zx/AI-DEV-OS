@@ -328,8 +328,8 @@ Validation:
 - ✅ Modal SDK (cloud sandbox)
 - ✅ Docker (local sandbox)
 - ✅ Unsloth (training)
-- ✅ Newton (physics sim, mockable)
-- ✅ BitNet (inference, mockable)
+- ✅ Newton (physics sim, real GPU execution)
+- ✅ BitNet (inference, real CPU execution)
 - ✅ Slack Bot & Linear Integration
 - ✅ GitHub OAuth & Auto-PRs
 - ✅ Daytona Sandbox

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.2.0] - 2026-03-24
+### Added
+- **LLM-Agnostic Engine**: Introduced `BaseLLM` with `AnthropicLLM` and `LocalLLM` (llama.cpp) implementations into `core.py`.
+- **True Agent Tooling**: Orchestrator sub-agents now utilize real iterative JSON-based tool loops to execute filesystem and shell logic dynamically.
+- **Hardware Integration**: Unsloth training, BitNet inferences, and Newton physics now enforce physical execution requirements, removing prior `asyncio` simulation mocks.
+- **Sandbox Reality**: Replaced simulated sleeps with real `modal.Function` allocation and containerized local `DockerSandbox` execution streams.
+
 ## [1.1.0] - 2026-03-22
 ### Added
 - GitHub Integration (OAuth, PRs, Commits).

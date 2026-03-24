@@ -126,7 +126,7 @@ graph TD
         │                                │
         │  ┌──────────────────────────┐ │
         │  │  Newton Physics Sim      │ │
-        │  │  - GPU-accelerated       │ │
+        │  │  - real GPU execution    │ │
         │  │  - Parallel episodes     │ │
         │  └──────────────────────────┘ │
         └────────┬──────────────────────┘
