@@ -22,25 +22,23 @@ AI Dev OS is an integrated platform where autonomous AI agents can handle comple
 
 I have integrated the official **Unified AI Platform Architecture** from your design board into the project documentation.
 
-
-
 ```
 Developer Request (Slack/Linear/CLI)
-    ↓
-    └─→ Open SWE Harness (Deep Agents + Middleware)
-        ├─→ Superpowers:brainstorming (Design refinement)
-        ├─→ Superpowers:using-git-worktrees (Isolated branch)
-        ├─→ Superpowers:writing-plans (Task breakdown)
-        └─→ Subagent Orchestration
-            ├─→ Agent-A (Sandbox-1): Code + Testing
-            ├─→ Agent-B (Sandbox-2): Training (Unsloth)
-            └─→ Agent-C (Sandbox-3): Simulation (Newton)
-                    ↓
-            Real-time Feedback (Claude HUD)
-                    ↓
-            Superpowers:verification + Code Review
-                    ↓
-            Auto-PR + Merge to Production
+     ↓
+     └─→ Open SWE Harness (Deep Agents + Middleware)
+         ├─→ Superpowers:brainstorming (Design refinement)
+         ├─→ Superpowers:using-git-worktrees (Isolated branch)
+         ├─→ Superpowers:writing-plans (Task breakdown)
+         └─→ Subagent Orchestration
+             ├─→ Agent-A (Sandbox-1): Code + Testing
+             ├─→ Agent-B (Sandbox-2): Training (Unsloth)
+             └─→ Agent-C (Sandbox-3): Simulation (Newton)
+                     ↓
+             Real-time Feedback (Claude HUD)
+                     ↓
+             Superpowers:verification + Code Review
+                     ↓
+             Auto-PR + Merge to Production
 ```
 
 ## 🚀 Quick Start
@@ -262,10 +260,17 @@ Create `~/.claude/plugins/claude-hud/config.json`:
 ## 📚 Documentation
 
 - [**ARCHITECTURE.md**](ARCHITECTURE.md) - Deep dive into system design
+- [**API_REFERENCE.md**](docs/API_REFERENCE.md) - API reference and interfaces
+- [**DATA_CONTRACTS.md**](docs/DATA_CONTRACTS.md) - Data schemas and validation rules
+- [**DEPENDENCY_STRATEGY.md**](docs/DEPENDENCY_STRATEGY.md) - Dependency management approach
+- [**OBSERVABILITY_PLAN.md**](docs/OBSERVABILITY_PLAN.md) - Logging, metrics, and observability
+- [**SECURITY_PLAN.md**](docs/SECURITY_PLAN.md) - Security practices and secrets management
 - [**SETUP_GUIDE.md**](docs/SETUP_GUIDE.md) - Detailed installation for each OS
+- [**VERSIONING.md**](docs/VERSIONING.md) - Versioning policy and release process
 - [**WORKFLOWS.md**](docs/WORKFLOWS.md) - How to trigger and manage agent workflows
 - [**CUSTOMIZATION.md**](docs/CUSTOMIZATION.md) - Extend with custom skills/tools
-- [**API_REFERENCE.md**](docs/API_REFERENCE.md) - Complete API documentation
+- [**ONBOARDING.md**](docs/ONBOARDING.md) - Guide for new contributors
+- [**RUNBOOKS.md**](docs/RUNBOOKS.md) - Operational procedures and recovery steps
 - [**TROUBLESHOOTING.md**](docs/TROUBLESHOOTING.md) - Debug common issues
 
 ## 🏆 Examples
