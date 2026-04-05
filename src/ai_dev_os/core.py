@@ -7,52 +7,48 @@ Coordinates Deep Agents, Superpowers skills, sandboxes, training, simulation, an
 import asyncio
 import json
 import logging
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from anthropic import Anthropic
-from langgraph.graph import END, START, StateGraph
+from abc import ABC, abstractmethod
 
 from ai_dev_os.sandbox import SandboxProvider
 from ai_dev_os.utils.context import ContextManager
 from ai_dev_os.utils.error_handling import with_retry
-from ai_dev_os.utils.snapshot import SnapshotManager
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
-
-
-class WorkflowPhase(Enum):
-    """Stages of the AI Dev OS workflow."""
-
-    BRAINSTORMING = "brainstorming"
-    PLANNING = "planning"
-    EXECUTION = "execution"
-    VALIDATION = "validation"
-    MERGE = "merge"
-
-
-from abc import ABC, abstractmethod
 
 class BaseLLM(ABC):
     @abstractmethod
-    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+    def generate(
+        self,
+        system: str,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float = 0.7,
+    ) -> Tuple[str, int, int]:
         pass
+
 
 class AnthropicLLM(BaseLLM):
     def __init__(self):
         import os
         from anthropic import Anthropic
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise ValueError("ANTHROPIC_API_KEY environment variable is missing.")
         self.client = Anthropic(api_key=api_key)
-        
-    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+
+    def generate(
+        self,
+        system: str,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float = 0.7,
+    ) -> Tuple[str, int, int]:
         response = self.client.messages.create(
             model="claude-3-5-sonnet-20240620",
             max_tokens=max_tokens,
@@ -60,22 +56,34 @@ class AnthropicLLM(BaseLLM):
             system=system,
             messages=messages,
         )
-        return response.content[0].text, response.usage.input_tokens, response.usage.output_tokens
+        return (
+            response.content[0].text,
+            response.usage.input_tokens,
+            response.usage.output_tokens,
+        )
+
 
 class LocalLLM(BaseLLM):
     def __init__(self, model_path: str):
         try:
             from llama_cpp import Llama
+
             self.model = Llama(model_path=model_path, n_ctx=8192, verbose=False)
         except ImportError:
             raise RuntimeError("llama-cpp-python is required for LocalLLM")
-            
-    def generate(self, system: str, messages: List[Dict[str, str]], max_tokens: int, temperature: float = 0.7) -> Tuple[str, int, int]:
+
+    def generate(
+        self,
+        system: str,
+        messages: List[Dict[str, str]],
+        max_tokens: int,
+        temperature: float = 0.7,
+    ) -> Tuple[str, int, int]:
         prompt = f"<system>\n{system}\n</system>\n"
         for m in messages:
             prompt += f"<{m['role']}>\n{m['content']}\n</{m['role']}>\n"
         prompt += "<assistant>\n"
-        
+
         response = self.model(prompt, max_tokens=max_tokens, temperature=temperature)
         text = response["choices"][0]["text"]
         return text, len(prompt) // 4, len(text) // 4
@@ -167,8 +175,8 @@ Current request: {state.user_request}
 
 Previous context:
 - Phase: {state.phase.value}
-- Design doc: {state.design_doc or 'None yet'}
-- Plan: {state.implementation_plan or 'None yet'}
+- Design doc: {state.design_doc or "None yet"}
+- Plan: {state.implementation_plan or "None yet"}
 
 Generate output for this skill:
 """
@@ -195,9 +203,9 @@ Generate output for this skill:
         state.add_log(f"Executing skill: {self.name}")
 
         # Track input tokens
-        in_tokens = self.context_manager.count_tokens(prompt) + self.context_manager.count_tokens(
-            self.system_prompt
-        )
+        in_tokens = self.context_manager.count_tokens(
+            prompt
+        ) + self.context_manager.count_tokens(self.system_prompt)
 
         # Execute via agnostic LLM provider
         result, in_t, out_t = self.llm.generate(
@@ -213,13 +221,17 @@ Generate output for this skill:
         self.context_manager.track_usage(state.id, self.name, in_tokens + out_tokens)
 
         # Update state percentage (assuming 200k limit for Claude 3.5 Sonnet)
-        state.context_usage = self.context_manager.get_usage_percentage(state.id, 200000)
+        state.context_usage = self.context_manager.get_usage_percentage(
+            state.id, 200000
+        )
 
         # Save cache
         with open(cache_file, "w") as f:
             json.dump({"result": result}, f)
 
-        state.add_log(f"Skill {self.name} completed, tokens: {in_tokens} in / {out_tokens} out")
+        state.add_log(
+            f"Skill {self.name} completed, tokens: {in_tokens} in / {out_tokens} out"
+        )
 
         return result
 
@@ -231,7 +243,9 @@ class ClaudeHUDIntegration:
         self.status_file = Path.home() / ".ai-dev-os" / "hud_status.json"
         self.status_file.parent.mkdir(parents=True, exist_ok=True)
 
-    def update(self, state: WorkflowState, context_usage: float, active_agents: List[str]):
+    def update(
+        self, state: WorkflowState, context_usage: float, active_agents: List[str]
+    ):
         """Update HUD with current state."""
         status = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -274,13 +288,17 @@ class SubagentOrchestrator:
                     return f.read()
             elif tool_name == "write_file":
                 import os
+
                 os.makedirs(os.path.dirname(args["path"]), exist_ok=True)
                 with open(args["path"], "w", encoding="utf-8") as f:
                     f.write(args["content"])
                 return f"Successfully wrote to {args['path']}"
             elif tool_name == "execute":
                 import subprocess
-                res = subprocess.run(args["command"], shell=True, capture_output=True, text=True)
+
+                res = subprocess.run(
+                    args["command"], shell=True, capture_output=True, text=True
+                )
                 return f"Exit: {res.returncode}\nOut: {res.stdout}\nErr: {res.stderr}"
             else:
                 return f"Tool {tool_name} not implemented."
@@ -334,22 +352,32 @@ Task:
             )
             total_in += in_t
             total_out += out_t
-            
+
             match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
             if match:
                 try:
                     tool_call = json.loads(match.group(1))
                     tool_name = tool_call.get("tool")
                     args = tool_call.get("args", {})
-                    
+
                     logger.info(f"Agent {config.name} executing tool: {tool_name}")
                     tool_result = self._execute_tool(tool_name, args)
-                    
+
                     messages.append({"role": "assistant", "content": text})
-                    messages.append({"role": "user", "content": f"Tool result:\n{tool_result}\nContinue execution."})
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": f"Tool result:\n{tool_result}\nContinue execution.",
+                        }
+                    )
                 except json.JSONDecodeError:
                     messages.append({"role": "assistant", "content": text})
-                    messages.append({"role": "user", "content": "Failed to parse JSON. Please format correctly."})
+                    messages.append(
+                        {
+                            "role": "user",
+                            "content": "Failed to parse JSON. Please format correctly.",
+                        }
+                    )
             else:
                 final_result = text
                 break
@@ -358,16 +386,22 @@ Task:
             final_result = text
 
         # Track usage
-        self.context_manager.track_usage("workflow-dummy", config.name, total_in + total_out)
+        self.context_manager.track_usage(
+            "workflow-dummy", config.name, total_in + total_out
+        )
 
-        logger.info(f"Subagent {config.name} completed, tokens: {total_in} in / {total_out} out")
+        logger.info(
+            f"Subagent {config.name} completed, tokens: {total_in} in / {total_out} out"
+        )
 
         return final_result
 
     async def orchestrate(self, state: WorkflowState) -> WorkflowState:
         """Orchestrate all subagents in parallel."""
 
-        state.add_log(f"Starting parallel execution of {len(state.subagent_configs)} agents")
+        state.add_log(
+            f"Starting parallel execution of {len(state.subagent_configs)} agents"
+        )
         state.phase = WorkflowPhase.EXECUTION
 
         # Update HUD
@@ -400,7 +434,9 @@ Task:
 
         return state
 
-    def _generate_task_description(self, state: WorkflowState, config: AgentConfig) -> str:
+    def _generate_task_description(
+        self, state: WorkflowState, config: AgentConfig
+    ) -> str:
         """Generate specific task description for an agent."""
 
         task_descriptions = {
@@ -437,13 +473,19 @@ Requirements:
 """,
         }
 
-        return task_descriptions.get(config.role, "Execute this task: " + state.implementation_plan)
+        return task_descriptions.get(
+            config.role, "Execute this task: " + state.implementation_plan
+        )
 
 
 class AIDevOSOrchestrator:
     """Main orchestrator for the entire AI Dev OS system."""
 
-    def __init__(self, sandbox_provider: SandboxProvider = SandboxProvider.MODAL, llm_provider: Optional[BaseLLM] = None):
+    def __init__(
+        self,
+        sandbox_provider: SandboxProvider = SandboxProvider.MODAL,
+        llm_provider: Optional[BaseLLM] = None,
+    ):
         self.sandbox_provider = sandbox_provider
         self.llm = llm_provider or AnthropicLLM()
         self.hud = ClaudeHUDIntegration()
@@ -455,7 +497,9 @@ class AIDevOSOrchestrator:
         self.skills = self._load_skills()
 
         # Subagent orchestrator
-        self.subagent_orchestrator = SubagentOrchestrator(sandbox_provider, self.context_manager, self.llm)
+        self.subagent_orchestrator = SubagentOrchestrator(
+            sandbox_provider, self.context_manager, self.llm
+        )
 
         # Load AGENTS.md rules
         self.agents_rules = self._load_agents_rules()
@@ -515,7 +559,7 @@ Output: A list of security findings with severity and remediation steps.
                 name="performance-optimization",
                 trigger="Efficiency",
                 system_prompt="""
-You are a performance engineer. Profile the system to find bottlenecks, memory leaks, and slow database queries. 
+You are a performance engineer. Profile the system to find bottlenecks, memory leaks, and slow database queries.
 Output: A performance report with specific optimization recommendations.
 """,
                 context_manager=self.context_manager,
@@ -550,7 +594,9 @@ Output: A performance report with specific optimization recommendations.
         import uuid
 
         state = WorkflowState(
-            id=str(uuid.uuid4()), phase=WorkflowPhase.BRAINSTORMING, user_request=user_request
+            id=str(uuid.uuid4()),
+            phase=WorkflowPhase.BRAINSTORMING,
+            user_request=user_request,
         )
 
         state.add_log(f"Starting workflow for request: {user_request}")
@@ -657,15 +703,26 @@ Output: A performance report with specific optimization recommendations.
         agents = []
 
         # Heuristic: detect what kind of task this is
-        if any(word in request_lower for word in ["code", "build", "feature", "fix", "test"]):
-            agents.append(
-                AgentConfig(name="code-agent", role="code", sandbox_provider=self.sandbox_provider)
-            )
-
-        if any(word in request_lower for word in ["train", "finetune", "model", "lora"]):
+        if any(
+            word in request_lower
+            for word in ["code", "build", "feature", "fix", "test"]
+        ):
             agents.append(
                 AgentConfig(
-                    name="training-agent", role="training", sandbox_provider=self.sandbox_provider
+                    name="code-agent",
+                    role="code",
+                    sandbox_provider=self.sandbox_provider,
+                )
+            )
+
+        if any(
+            word in request_lower for word in ["train", "finetune", "model", "lora"]
+        ):
+            agents.append(
+                AgentConfig(
+                    name="training-agent",
+                    role="training",
+                    sandbox_provider=self.sandbox_provider,
                 )
             )
 
@@ -681,7 +738,11 @@ Output: A performance report with specific optimization recommendations.
         # Default to code agent if unclear
         if not agents:
             agents.append(
-                AgentConfig(name="code-agent", role="code", sandbox_provider=self.sandbox_provider)
+                AgentConfig(
+                    name="code-agent",
+                    role="code",
+                    sandbox_provider=self.sandbox_provider,
+                )
             )
 
         return agents
@@ -702,7 +763,9 @@ async def main():
     print("WORKFLOW SUMMARY")
     print("=" * 60)
     print(f"Workflow ID: {state.id}")
-    print(f"Status: {'COMPLETED' if state.phase == WorkflowPhase.MERGE else 'IN PROGRESS'}")
+    print(
+        f"Status: {'COMPLETED' if state.phase == WorkflowPhase.MERGE else 'IN PROGRESS'}"
+    )
     print(f"Total logs: {len(state.logs)}")
     print(f"Agents used: {len(state.subagent_configs)}")
 

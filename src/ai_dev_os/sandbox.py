@@ -136,7 +136,7 @@ class ModalSandbox(Sandbox):
         """Execute command in Modal using an actual remote function."""
         try:
             import modal
-            
+
             self.add_log(f"Executing: {command}")
 
             # Define a throwaway modal function to execute the command natively
@@ -144,17 +144,19 @@ class ModalSandbox(Sandbox):
             def run_remote_command(cmd: str, work_dir: str):
                 import subprocess
                 import os
-                
+
                 # Ensure workspace exists
                 os.makedirs(work_dir, exist_ok=True)
-                
+
                 result = subprocess.run(
                     cmd, shell=True, cwd=work_dir, capture_output=True, text=True
                 )
                 return result.returncode, result.stdout, result.stderr
 
             # Execute via modal remote
-            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+            with modal.EnableTest() if getattr(
+                modal, "is_local", lambda: False
+            )() else self.app.run():
                 exit_code, stdout, stderr = run_remote_command.remote(command, cwd)
 
             self.add_log(f"Execution complete with exit code: {exit_code}")
@@ -170,26 +172,29 @@ class ModalSandbox(Sandbox):
         try:
             import modal
             import pathlib
-            
+
             self.add_log(f"Uploading {local_path} to {remote_path}")
-            
+
             local_file = pathlib.Path(local_path)
             if not local_file.exists():
                 raise FileNotFoundError(f"Local file not found: {local_path}")
-            
+
             file_data = local_file.read_bytes()
 
             @self.app.function()
             def write_remote_file(r_path: str, data: bytes):
                 import os
+
                 os.makedirs(os.path.dirname(r_path), exist_ok=True)
-                with open(r_path, 'wb') as f:
+                with open(r_path, "wb") as f:
                     f.write(data)
                 return True
 
-            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+            with modal.EnableTest() if getattr(
+                modal, "is_local", lambda: False
+            )() else self.app.run():
                 return write_remote_file.remote(remote_path, file_data)
-                
+
         except Exception as e:
             self.add_log(f"Upload failed: {str(e)}")
             return False
@@ -199,24 +204,27 @@ class ModalSandbox(Sandbox):
         try:
             import modal
             import pathlib
-            
+
             self.add_log(f"Downloading {remote_path} to {local_path}")
 
             @self.app.function()
             def read_remote_file(r_path: str):
                 import os
+
                 if not os.path.exists(r_path):
                     raise FileNotFoundError(f"Remote file not found: {r_path}")
-                with open(r_path, 'rb') as f:
+                with open(r_path, "rb") as f:
                     return f.read()
 
-            with modal.EnableTest() if getattr(modal, "is_local", lambda: False)() else self.app.run():
+            with modal.EnableTest() if getattr(
+                modal, "is_local", lambda: False
+            )() else self.app.run():
                 file_data = read_remote_file.remote(remote_path)
-                
+
             local_file = pathlib.Path(local_path)
             local_file.parent.mkdir(parents=True, exist_ok=True)
             local_file.write_bytes(file_data)
-            
+
             return True
         except Exception as e:
             self.add_log(f"Download failed: {str(e)}")
@@ -335,13 +343,10 @@ class DockerSandbox(Sandbox):
         try:
             self.add_log(f"Executing: {command}")
 
-            # run executes command and returns ExitCode, bytes output. 
+            # run executes command and returns ExitCode, bytes output.
             # To get stderr we have to use demux=True, but exec_run supports it via demux.
             exit_code, output = self.container.exec_run(
-                f"bash -c 'cd {cwd} && {command}'", 
-                stdout=True, 
-                stderr=True,
-                demux=True
+                f"bash -c 'cd {cwd} && {command}'", stdout=True, stderr=True, demux=True
             )
 
             # demux=True returns (stdout, stderr) tuple

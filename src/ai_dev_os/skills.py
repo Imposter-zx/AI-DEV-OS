@@ -14,6 +14,7 @@ class DebuggingSkill:
         self.name = name
         import os
         from anthropic import Anthropic
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         self.client = Anthropic(api_key=api_key) if api_key else None
 
@@ -35,9 +36,9 @@ class DebuggingSkill:
                 "analysis": "API key missing. Cannot perform dynamic analysis.",
                 "suggested_fix": "Set ANTHROPIC_API_KEY",
             }
-            
+
         prompt = f"Analyze this error trace and corresponding code. Identify the bug and suggest a fix.\n\nError: {error_trace}\n\nCode context: {code_context}"
-        
+
         try:
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
@@ -47,14 +48,14 @@ class DebuggingSkill:
             )
             result_text = response.content[0].text
             import json
-            
+
             try:
                 # Clean markdown blocks if present
                 if result_text.startswith("```json"):
                     result_text = result_text.split("```json")[1].split("```")[0].strip()
                 elif result_text.startswith("```"):
                     result_text = result_text.split("```")[1].split("```")[0].strip()
-                    
+
                 parsed = json.loads(result_text)
                 return {
                     "status": "success",
@@ -80,22 +81,23 @@ class PerformanceOptimizationSkill:
         self.name = name
         import os
         from anthropic import Anthropic
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         self.client = Anthropic(api_key=api_key) if api_key else None
 
     async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Running performance optimization analysis...")
-        
+
         code_context = context.get("code", "No code provided")
-        
+
         if not self.client:
             return {
                 "status": "error",
                 "optimizations": ["API key missing. Cannot perform dynamic analysis."],
             }
-            
+
         prompt = f"Analyze this code for performance bottlenecks (memory leaks, O(n^2) loops, etc).\n\nCode: {code_context}"
-        
+
         try:
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
@@ -105,13 +107,13 @@ class PerformanceOptimizationSkill:
             )
             result_text = response.content[0].text
             import json
-            
+
             try:
                 if result_text.startswith("```json"):
                     result_text = result_text.split("```json")[1].split("```")[0].strip()
                 elif result_text.startswith("```"):
                     result_text = result_text.split("```")[1].split("```")[0].strip()
-                    
+
                 parsed = json.loads(result_text)
                 return {
                     "status": "success",
@@ -135,20 +137,21 @@ class DocumentationGenerationSkill:
         self.name = name
         import os
         from anthropic import Anthropic
+
         api_key = os.getenv("ANTHROPIC_API_KEY")
         self.client = Anthropic(api_key=api_key) if api_key else None
 
     async def execute(self, context: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Generating documentation updates...")
-        
+
         code_context = context.get("code", "")
         file_path = context.get("file_path", "unknown.py")
-        
+
         if not self.client or not code_context:
             return {"status": "error", "updated_files": []}
-            
+
         prompt = f"Generate appropriate Python docstrings and markdown notes for this file: {file_path}\n\n{code_context}"
-        
+
         try:
             response = self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
@@ -156,6 +159,9 @@ class DocumentationGenerationSkill:
                 system="Generate documentation. Return JSON with 'updated_files' as a list of strings representing the generated markdown layout.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            return {"status": "success", "updated_files": [f"Generated docs for {file_path} (Truncated for safety)"]}
+            return {
+                "status": "success",
+                "updated_files": [f"Generated docs for {file_path} (Truncated for safety)"],
+            }
         except Exception as e:
             return {"status": "error", "updated_files": [str(e)]}

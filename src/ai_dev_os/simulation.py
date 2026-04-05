@@ -19,19 +19,22 @@ try:
 except ImportError:
     HAS_NEWTON = False
 
+
 class ObservationSpace:
     """Base interface for RL observation spaces."""
+
     def __init__(self, shape: tuple):
         self.shape = shape
+
 
 class ActionSpace:
     """Base interface for RL action spaces."""
+
     def __init__(self, shape: tuple):
         self.shape = shape
-    
+
     def sample(self):
         raise NotImplementedError
-
 
 
 @dataclass
@@ -77,8 +80,10 @@ class NewtonSimulation:
         """Initialize the simulation environment."""
         try:
             if not HAS_NEWTON:
-                raise RuntimeError("newton_sim is not installed. Real physics simulation requires newton_sim.")
-                
+                raise RuntimeError(
+                    "newton_sim is not installed. Real physics simulation requires newton_sim."
+                )
+
             self.environment = newton_sim.Environment(
                 robot=self.config.robot_type,
                 terrain=self.config.terrain,
@@ -143,7 +148,7 @@ class NewtonSimulation:
         """Run a single episode and return the total reward."""
         if not (HAS_NEWTON and self.environment):
             raise RuntimeError("Simulation environment not initialized.")
-            
+
         obs = self.environment.reset()
         total_reward = 0.0
         for step in range(self.config.max_steps_per_episode):
