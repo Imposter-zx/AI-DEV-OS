@@ -19,6 +19,29 @@ from ai_dev_os.sandbox import SandboxProvider
 from ai_dev_os.utils.context import ContextManager
 from ai_dev_os.utils.error_handling import with_retry
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+
+class WorkflowPhase(Enum):
+    """Stages of the AI Dev OS workflow."""
+
+    BRAINSTORMING = "brainstorming"
+    PLANNING = "planning"
+    EXECUTION = "execution"
+    VALIDATION = "validation"
+    MERGE = "merge"
+
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
+)
+logger = logging.getLogger(__name__)
+
 
 class BaseLLM(ABC):
     @abstractmethod
