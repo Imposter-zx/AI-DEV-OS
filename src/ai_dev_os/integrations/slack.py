@@ -1,8 +1,12 @@
+import asyncio
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
+
+from ai_dev_os.utils.metrics import metrics_collector
 
 logger = logging.getLogger(__name__)
 
@@ -14,9 +18,12 @@ class SlackIntegration:
 
     def __init__(self, token: str):
         if not token or token.strip() == "":
-            raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
+            raise ValueError(
+                "CRITICAL SECURITY ERROR: Slack token is missing or empty."
+            )
         self.token = token
         self.client = WebClient(token=token)
+        self.integration_name = "slack"
 
     async def send_message(
         self,
@@ -28,6 +35,7 @@ class SlackIntegration:
         """
         Send a message to Slack, optionally in a thread.
         """
+        start_time = time.time()
         kwargs = {"channel": channel}
         if text:
             kwargs["text"] = text
@@ -38,10 +46,37 @@ class SlackIntegration:
 
         try:
             response = self.client.chat_postMessage(**kwargs)  # type: ignore
-            return {"status": "success", "ts": response["ts"]}
+            metrics_collector.record_success(
+                self.integration_name, "send_message", time.time() - start_time
+            )
+            logger.info(
+                f"Slack message sent to {channel} in {time.time() - start_time:.2f}s"
+            )
+            return {
+                "status": "success",
+                "ts": response["ts"],
+                "latency": time.time() - start_time,
+            }
         except SlackApiError as e:
+            metrics_collector.record_failure(
+                self.integration_name, "send_message", time.time() - start_time, str(e)
+            )
             logger.error(f"Slack API error: {e.response['error']}")
-            return {"status": "error", "message": str(e)}
+            return {
+                "status": "error",
+                "message": str(e),
+                "latency": time.time() - start_time,
+            }
+        except Exception as e:
+            metrics_collector.record_failure(
+                self.integration_name, "send_message", time.time() - start_time, str(e)
+            )
+            logger.error(f"Unexpected error sending Slack message: {e}")
+            return {
+                "status": "error",
+                "message": str(e),
+                "latency": time.time() - start_time,
+            }
 
     async def handle_message(self, payload: dict) -> dict:
         """

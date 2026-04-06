@@ -1,33 +1,25 @@
 import logging
 from typing import Dict, List, Optional
 
-import tiktoken
-
 logger = logging.getLogger(__name__)
 
 
 class ContextManager:
-    """
-    Tracks token usage and manages context window for AI Dev OS workflows.
-    """
+    """Tracks token usage and manages context window for AI Dev OS workflows."""
 
     def __init__(self, model_name: str = "gpt-4"):
-        try:
-            self.encoding = tiktoken.encoding_for_model(model_name)
-        except KeyError:
-            logger.warning(
-                f"Model {model_name} not found in tiktoken, falling back to cl100k_base"
-            )
-            self.encoding = tiktoken.get_encoding("cl100k_base")
-
+        # Simple fallback: estimate tokens as ~4 characters per token
+        # This avoids the tiktoken dependency which is problematic to install
+        self.char_per_token = 4.0
         self.workflow_usage: Dict[str, int] = {}
         self.agent_usage: Dict[str, int] = {}
 
     def count_tokens(self, text: str) -> int:
-        """Count tokens in a string."""
+        """Count tokens in a string using simple approximation."""
         if not text:
             return 0
-        return len(self.encoding.encode(text))
+        # Simple approximation: ~4 characters per token
+        return len(text) // int(self.char_per_token)
 
     def track_usage(self, workflow_id: str, agent_id: str, tokens: int):
         """Track token usage for a workflow and agent."""
