@@ -26,9 +26,7 @@ class GitHubIntegration:
 
     def __init__(self, token: str):
         if not token or token.strip() == "":
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: GitHub token is missing or empty."
-            )
+            raise ValueError("CRITICAL SECURITY ERROR: GitHub token is missing or empty.")
         self.token = token
         self.client = Github(token) if HAS_GITHUB else None
         # Metrics counters
@@ -105,9 +103,7 @@ class GitHubIntegration:
             repo = self.client.get_repo(repo_name)
             pr = repo.create_pull(title=title, body=description, head=branch, base=base)
             self.prs_created += 1
-            logger.info(
-                f"PR #{pr.number} created: {pr.title} in {time.time() - start_time:.2f}s"
-            )
+            logger.info(f"PR #{pr.number} created: {pr.title} in {time.time() - start_time:.2f}s")
             return {
                 "url": pr.html_url,
                 "number": pr.number,
@@ -135,9 +131,7 @@ class GitHubIntegration:
                 "latency": time.time() - start_time,
             }
 
-    async def add_comment(
-        self, repo_name: str, pr_number: int, body: str
-    ) -> Dict[str, Any]:
+    async def add_comment(self, repo_name: str, pr_number: int, body: str) -> Dict[str, Any]:
         """Add a comment to a PR or Issue."""
         start_time = time.time()
         if not HAS_GITHUB or not self.client:
@@ -152,9 +146,7 @@ class GitHubIntegration:
             issue = repo.get_issue(pr_number)
             issue.create_comment(body)
             self.comments_added += 1
-            logger.info(
-                f"Comment added to issue #{pr_number} in {time.time() - start_time:.2f}s"
-            )
+            logger.info(f"Comment added to issue #{pr_number} in {time.time() - start_time:.2f}s")
             return {
                 "status": "success",
                 "message": "Comment added",
@@ -195,10 +187,7 @@ class GitHubIntegration:
         Get integration metrics.
         """
         total_requests = (
-            self.branches_created
-            + self.prs_created
-            + self.comments_added
-            + self.requests_failed
+            self.branches_created + self.prs_created + self.comments_added + self.requests_failed
         )
         success_rate = (
             (

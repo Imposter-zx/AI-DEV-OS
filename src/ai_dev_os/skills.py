@@ -13,6 +13,7 @@ class DebuggingSkill:
     def __init__(self, name: str = "systematic-debugging"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -80,6 +81,7 @@ class PerformanceOptimizationSkill:
     def __init__(self, name: str = "performance-optimization"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -136,6 +138,7 @@ class DocumentationGenerationSkill:
     def __init__(self, name: str = "doc-generation"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")

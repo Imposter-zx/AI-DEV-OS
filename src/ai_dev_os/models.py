@@ -138,16 +138,11 @@ class UnslothTrainer:
                 metrics = {
                     "final_loss": train_result.training_loss,
                     "train_loss_history": [
-                        log.get("loss", 0)
-                        for log in trainer.state.log_history
-                        if "loss" in log
+                        log.get("loss", 0) for log in trainer.state.log_history if "loss" in log
                     ],
                     "validation_loss": train_result.metrics.get("eval_loss", 0),
                     "perplexity": 2**train_result.training_loss,
-                    "training_time_minutes": train_result.metrics.get(
-                        "train_runtime", 0
-                    )
-                    / 60,
+                    "training_time_minutes": train_result.metrics.get("train_runtime", 0) / 60,
                     "speedup_vs_standard": 2.15,
                     "vram_reduction_percent": 68.5,
                 }
@@ -157,14 +152,10 @@ class UnslothTrainer:
                 logger.error(error_msg)
                 raise RuntimeError(error_msg)
 
-            self.training_logs.append(
-                {"stage": "training", "status": "success", **metrics}
-            )
+            self.training_logs.append({"stage": "training", "status": "success", **metrics})
 
             logger.info(f"Training completed. Loss: {metrics['final_loss']}")
-            logger.info(
-                f"VRAM savings: {metrics.get('vram_reduction_percent', 0):.1f}%"
-            )
+            logger.info(f"VRAM savings: {metrics.get('vram_reduction_percent', 0):.1f}%")
 
             return True, metrics
 
@@ -204,8 +195,8 @@ class UnslothTrainer:
             output_path.parent.mkdir(parents=True, exist_ok=True)
 
             # In production, use bitnet.cpp or llama.cpp convert script utilities
-            import subprocess
             import shutil
+            import subprocess
 
             convert_script = shutil.which("llama.cpp/convert.py")
             if not convert_script:
@@ -213,9 +204,7 @@ class UnslothTrainer:
                     "llama.cpp/convert.py not found in PATH. Real quantization requires llama.cpp installed locally."
                 )
 
-            cmd = (
-                f"python {convert_script} --outfile {output_path} --outtype q4_0 {path}"
-            )
+            cmd = f"python {convert_script} --outfile {output_path} --outtype q4_0 {path}"
             result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
 
             if result.returncode != 0:
@@ -346,17 +335,13 @@ class ModelManager:
         self.inference_engines[model_id] = engine
         return await engine.load()
 
-    async def infer(
-        self, model_id: str, prompt: str, max_tokens: int = 512
-    ) -> Tuple[bool, str]:
+    async def infer(self, model_id: str, prompt: str, max_tokens: int = 512) -> Tuple[bool, str]:
         """Run inference."""
         if model_id not in self.inference_engines:
             logger.error(f"Model {model_id} not loaded")
             return False, ""
 
-        return await self.inference_engines[model_id].infer(
-            prompt, max_tokens=max_tokens
-        )
+        return await self.inference_engines[model_id].infer(prompt, max_tokens=max_tokens)
 
     def get_training_stats(self, model_name: str) -> Optional[Dict[str, Any]]:
         """Get training statistics."""
@@ -388,9 +373,7 @@ async def train_model(
     return await manager.train_model(config)
 
 
-async def inference(
-    model_path: str, prompt: str, max_tokens: int = 512
-) -> Tuple[bool, str]:
+async def inference(model_path: str, prompt: str, max_tokens: int = 512) -> Tuple[bool, str]:
     """Convenience function for inference."""
     engine = BitNetInference(model_path)
     if not await engine.load():

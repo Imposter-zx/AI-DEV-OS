@@ -37,9 +37,7 @@ class IntegrationMetricsCollector:
         self._start_time = time.time()
         logger.info("IntegrationMetricsCollector initialized")
 
-    def record_success(
-        self, integration_name: str, operation: str, latency: float
-    ) -> None:
+    def record_success(self, integration_name: str, operation: str, latency: float) -> None:
         """
         Record a successful operation.
         """
@@ -133,9 +131,7 @@ class IntegrationMetricsCollector:
                 total_ops = metrics["success_count"] + metrics["failure_count"]
                 metrics["total_operations"] = total_ops
                 metrics["success_rate"] = (
-                    (metrics["success_count"] / total_ops * 100)
-                    if total_ops > 0
-                    else 0.0
+                    (metrics["success_count"] / total_ops * 100) if total_ops > 0 else 0.0
                 )
                 metrics["average_latency"] = (
                     (metrics["total_latency"] / total_ops) if total_ops > 0 else 0.0
@@ -145,19 +141,13 @@ class IntegrationMetricsCollector:
                 # Process operation metrics
                 if "operations" in metrics:
                     for op_name, op_metrics in metrics["operations"].items():
-                        op_total = (
-                            op_metrics["success_count"] + op_metrics["failure_count"]
-                        )
+                        op_total = op_metrics["success_count"] + op_metrics["failure_count"]
                         op_metrics["total_operations"] = op_total
                         op_metrics["success_rate"] = (
-                            (op_metrics["success_count"] / op_total * 100)
-                            if op_total > 0
-                            else 0.0
+                            (op_metrics["success_count"] / op_total * 100) if op_total > 0 else 0.0
                         )
                         op_metrics["average_latency"] = (
-                            (op_metrics["total_latency"] / op_total)
-                            if op_total > 0
-                            else 0.0
+                            (op_metrics["total_latency"] / op_total) if op_total > 0 else 0.0
                         )
 
                 return metrics
@@ -208,17 +198,15 @@ class IntegrationMetricsCollector:
             for name, metrics in self._metrics.items():
                 total_ops = metrics["success_count"] + metrics["failure_count"]
                 success_rate = (
-                    (metrics["success_count"] / total_ops * 100)
-                    if total_ops > 0
-                    else 100.0
+                    (metrics["success_count"] / total_ops * 100) if total_ops > 0 else 100.0
                 )
 
                 integration_health = {
-                    "status": "healthy"
-                    if success_rate >= 95.0
-                    else "degraded"
-                    if success_rate >= 80.0
-                    else "unhealthy",
+                    "status": (
+                        "healthy"
+                        if success_rate >= 95.0
+                        else "degraded" if success_rate >= 80.0 else "unhealthy"
+                    ),
                     "success_rate": success_rate,
                     "total_operations": total_ops,
                     "last_success": metrics.get("last_success"),

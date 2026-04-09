@@ -135,8 +135,8 @@ class ModalSandbox(Sandbox):
             # Define a throwaway modal function to execute the command natively
             @self.app.function()
             def run_remote_command(cmd: str, work_dir: str):
-                import subprocess
                 import os
+                import subprocess
 
                 # Ensure workspace exists
                 os.makedirs(work_dir, exist_ok=True)
@@ -147,9 +147,11 @@ class ModalSandbox(Sandbox):
                 return result.returncode, result.stdout, result.stderr
 
             # Execute via modal remote
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 exit_code, stdout, stderr = run_remote_command.remote(command, cwd)
 
             self.add_log(f"Execution complete with exit code: {exit_code}")
@@ -163,8 +165,9 @@ class ModalSandbox(Sandbox):
     async def upload_file(self, local_path: str, remote_path: str) -> bool:
         """Upload file to Modal sandbox via remote function."""
         try:
-            import modal
             import pathlib
+
+            import modal
 
             self.add_log(f"Uploading {local_path} to {remote_path}")
 
@@ -183,9 +186,11 @@ class ModalSandbox(Sandbox):
                     f.write(data)
                 return True
 
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 return write_remote_file.remote(remote_path, file_data)
 
         except Exception as e:
@@ -195,8 +200,9 @@ class ModalSandbox(Sandbox):
     async def download_file(self, remote_path: str, local_path: str) -> bool:
         """Download file from Modal sandbox via remote function."""
         try:
-            import modal
             import pathlib
+
+            import modal
 
             self.add_log(f"Downloading {remote_path} to {local_path}")
 
@@ -209,9 +215,11 @@ class ModalSandbox(Sandbox):
                 with open(r_path, "rb") as f:
                     return f.read()
 
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 file_data = read_remote_file.remote(remote_path)
 
             local_file = pathlib.Path(local_path)
