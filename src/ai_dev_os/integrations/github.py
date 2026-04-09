@@ -189,7 +189,9 @@ class GitHubIntegration:
             self.branches_created + self.prs_created + self.comments_added + self.requests_failed
         )
         if total_requests > 0:
-            success_rate = ((self.branches_created + self.prs_created + self.comments_added) / total_requests) * 100.0
+            success_rate = (
+                (self.branches_created + self.prs_created + self.comments_added) / total_requests
+            ) * 100.0
         else:
             success_rate = 0.0
 
