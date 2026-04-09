@@ -469,7 +469,9 @@ Requirements:
 """,
         }
 
-        return task_descriptions.get(config.role, "Execute this task: " + (state.implementation_plan or ""))
+        return task_descriptions.get(
+            config.role, "Execute this task: " + (state.implementation_plan or "")
+        )
 
 
 class AIDevOSOrchestrator:
