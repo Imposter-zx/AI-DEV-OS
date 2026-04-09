@@ -13,6 +13,7 @@ class DebuggingSkill:
     def __init__(self, name: str = "systematic-debugging"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -46,7 +47,11 @@ class DebuggingSkill:
                 system="You are an expert Python debugger. Provide a concise JSON response with 'analysis' and 'suggested_fix' keys.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            result_text = response.content[0].text
+            content_block = response.content[0]
+            if hasattr(content_block, "text"):
+                result_text = content_block.text
+            else:
+                result_text = str(content_block)
             import json
 
             try:
@@ -80,6 +85,7 @@ class PerformanceOptimizationSkill:
     def __init__(self, name: str = "performance-optimization"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -105,7 +111,11 @@ class PerformanceOptimizationSkill:
                 system="You are a performance engineer. Return a JSON dict with a key 'optimizations' containing a list of strings detailing how to speed up the code.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            result_text = response.content[0].text
+            content_block = response.content[0]
+            if hasattr(content_block, "text"):
+                result_text = content_block.text
+            else:
+                result_text = str(content_block)
             import json
 
             try:
@@ -136,6 +146,7 @@ class DocumentationGenerationSkill:
     def __init__(self, name: str = "doc-generation"):
         self.name = name
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -153,7 +164,7 @@ class DocumentationGenerationSkill:
         prompt = f"Generate appropriate Python docstrings and markdown notes for this file: {file_path}\n\n{code_context}"
 
         try:
-            response = self.client.messages.create(
+            self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
                 max_tokens=2048,
                 system="Generate documentation. Return JSON with 'updated_files' as a list of strings representing the generated markdown layout.",

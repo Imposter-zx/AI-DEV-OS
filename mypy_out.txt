@@ -1,0 +1,13 @@
+src\ai_dev_os\utils\security.py:14: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\utils\security.py:15: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\utils\metrics.py:36: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\utils\monitoring.py:25: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\sandbox.py:462: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\core.py:167: error: Item "None" of "list[str] | None" has no attribute "append"  [union-attr]
+src\ai_dev_os\core.py:324: error: Item "None" of "list[str] | None" has no attribute "__iter__" (not iterable)  [union-attr]
+src\ai_dev_os\core.py:410: error: Argument 1 to "len" has incompatible type "list[AgentConfig] | None"; expected "Sized"  [arg-type]
+src\ai_dev_os\core.py:414: error: Item "None" of "list[AgentConfig] | None" has no attribute "__iter__" (not iterable)  [union-attr]
+src\ai_dev_os\core.py:419: error: Item "None" of "list[AgentConfig] | None" has no attribute "__iter__" (not iterable)  [union-attr]
+src\ai_dev_os\models.py:311: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+src\ai_dev_os\models.py:312: note: By default the bodies of untyped functions are not checked, consider using --check-untyped-defs  [annotation-unchecked]
+Found 5 errors in 1 file (checked 21 source files)

@@ -23,7 +23,7 @@ class DaytonaClient:
         if not self.api_key:
             return f"mock-workspace-{name}"
 
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient():
             # Simulated Daytona interaction
             logger.info(f"Creating Daytona workspace: {name}")
             return f"daytona-{name}-id"

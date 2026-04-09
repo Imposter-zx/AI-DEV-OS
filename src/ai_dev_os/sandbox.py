@@ -2,8 +2,6 @@
 Sandbox abstraction layer - supports Modal, Daytona, Runloop, Docker.
 """
 
-import asyncio
-import json
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -45,8 +43,8 @@ class SandboxConfig:
     timeout_seconds: int = 3600
     gpu: bool = False
     gpu_type: Optional[str] = None  # "a100", "h100", etc.
-    env_vars: Dict[str, str] = None
-    mounts: Dict[str, str] = None  # local_path -> container_path
+    env_vars: Optional[Dict[str, str]] = None
+    mounts: Optional[Dict[str, str]] = None  # local_path -> container_path
 
     def __post_init__(self):
         if self.env_vars is None:
@@ -67,7 +65,6 @@ class Sandbox(ABC):
     @abstractmethod
     async def initialize(self) -> str:
         """Initialize the sandbox. Returns sandbox ID."""
-        pass
 
     @abstractmethod
     async def execute(self, command: str, cwd: str = "/workspace") -> Tuple[int, str, str]:
@@ -75,22 +72,18 @@ class Sandbox(ABC):
         Execute a command in the sandbox.
         Returns: (exit_code, stdout, stderr)
         """
-        pass
 
     @abstractmethod
     async def upload_file(self, local_path: str, remote_path: str) -> bool:
         """Upload a file to the sandbox."""
-        pass
 
     @abstractmethod
     async def download_file(self, remote_path: str, local_path: str) -> bool:
         """Download a file from the sandbox."""
-        pass
 
     @abstractmethod
     async def terminate(self) -> bool:
         """Terminate the sandbox."""
-        pass
 
     def add_log(self, message: str):
         """Add a log entry."""
@@ -125,7 +118,7 @@ class ModalSandbox(Sandbox):
             self.status = SandboxStatus.READY
             self.add_log(f"Modal sandbox initialized: {self.id}")
 
-            return self.id
+            return str(self.id)
 
         except ImportError:
             logger.error("Modal not installed. Install with: pip install modal")
@@ -142,8 +135,8 @@ class ModalSandbox(Sandbox):
             # Define a throwaway modal function to execute the command natively
             @self.app.function()
             def run_remote_command(cmd: str, work_dir: str):
-                import subprocess
                 import os
+                import subprocess
 
                 # Ensure workspace exists
                 os.makedirs(work_dir, exist_ok=True)
@@ -154,9 +147,11 @@ class ModalSandbox(Sandbox):
                 return result.returncode, result.stdout, result.stderr
 
             # Execute via modal remote
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 exit_code, stdout, stderr = run_remote_command.remote(command, cwd)
 
             self.add_log(f"Execution complete with exit code: {exit_code}")
@@ -170,8 +165,9 @@ class ModalSandbox(Sandbox):
     async def upload_file(self, local_path: str, remote_path: str) -> bool:
         """Upload file to Modal sandbox via remote function."""
         try:
-            import modal
             import pathlib
+
+            import modal
 
             self.add_log(f"Uploading {local_path} to {remote_path}")
 
@@ -190,9 +186,11 @@ class ModalSandbox(Sandbox):
                     f.write(data)
                 return True
 
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 return write_remote_file.remote(remote_path, file_data)
 
         except Exception as e:
@@ -202,8 +200,9 @@ class ModalSandbox(Sandbox):
     async def download_file(self, remote_path: str, local_path: str) -> bool:
         """Download file from Modal sandbox via remote function."""
         try:
-            import modal
             import pathlib
+
+            import modal
 
             self.add_log(f"Downloading {remote_path} to {local_path}")
 
@@ -216,9 +215,11 @@ class ModalSandbox(Sandbox):
                 with open(r_path, "rb") as f:
                     return f.read()
 
-            with modal.EnableTest() if getattr(
-                modal, "is_local", lambda: False
-            )() else self.app.run():
+            with (
+                modal.EnableTest()
+                if getattr(modal, "is_local", lambda: False)()
+                else self.app.run()
+            ):
                 file_data = read_remote_file.remote(remote_path)
 
             local_file = pathlib.Path(local_path)
@@ -256,7 +257,7 @@ class DaytonaSandbox(Sandbox):
             self.id = await self.client.create_workspace(self.config.name)
             self.status = SandboxStatus.READY
             self.add_log(f"Daytona sandbox initialized: {self.id}")
-            return self.id
+            return str(self.id)
         except Exception as e:
             self.status = SandboxStatus.ERROR
             self.add_log(f"Initialization failed: {str(e)}")
@@ -266,7 +267,7 @@ class DaytonaSandbox(Sandbox):
         """Execute command in Daytona via API."""
         try:
             self.add_log(f"Executing in Daytona: {command}")
-            result = await self.client.execute_command(self.id, command)
+            result = await self.client.execute_command(str(self.id), command)
             return (result["exit_code"], result["stdout"], result["stderr"])
         except Exception as e:
             return (1, "", str(e))
@@ -294,7 +295,7 @@ class DaytonaSandbox(Sandbox):
         """Terminate Daytona sandbox."""
         try:
             self.add_log("Terminating Daytona workspace")
-            success = await self.client.delete_workspace(self.id)
+            success = await self.client.delete_workspace(str(self.id))
             if success:
                 self.status = SandboxStatus.TERMINATED
             return success
@@ -327,7 +328,7 @@ class DockerSandbox(Sandbox):
             self.status = SandboxStatus.READY
             self.add_log(f"Docker sandbox initialized: {self.id}")
 
-            return self.id
+            return str(self.id)
 
         except ImportError:
             logger.error("Docker SDK not installed. Install with: pip install docker")
@@ -418,7 +419,7 @@ class DockerSandbox(Sandbox):
 class SandboxFactory:
     """Factory for creating sandboxes."""
 
-    _providers = {
+    _providers: Dict[str, type] = {
         "modal": ModalSandbox,
         "daytona": DaytonaSandbox,
         "docker": DockerSandbox,
@@ -468,7 +469,7 @@ class SandboxManager:
 
         cfg = SandboxConfig(provider=p_val, name=name or f"sb-{int(time.time())}")
         sandbox = await SandboxFactory.create(cfg)
-        self.active_sandboxes[sandbox.id] = sandbox
+        self.active_sandboxes[str(sandbox.id)] = sandbox
         return sandbox
 
     async def execute_command(self, sandbox_env: Any, command: str) -> Dict[str, Any]:

@@ -1,7 +1,5 @@
-import asyncio
 import logging
 import time
-from typing import Any, Dict, Optional
 
 import httpx
 
@@ -18,9 +16,7 @@ class LinearIntegration:
 
     def __init__(self, api_key: str):
         if not api_key or api_key.strip() == "":
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: Linear API key is missing or empty."
-            )
+            raise ValueError("CRITICAL SECURITY ERROR: Linear API key is missing or empty.")
         self.api_key = api_key
         self.api_url = "https://api.linear.app/graphql"
         self.integration_name = "linear"
@@ -96,9 +92,7 @@ class LinearIntegration:
                     "update_issue_status",
                     time.time() - start_time,
                 )
-                success = (
-                    data.get("data", {}).get("issueUpdate", {}).get("success", False)
-                )
+                success = data.get("data", {}).get("issueUpdate", {}).get("success", False)
                 logger.info(
                     f"Linear issue {issue_id} status updated in {time.time() - start_time:.2f}s"
                 )
@@ -121,7 +115,7 @@ class LinearIntegration:
         """
         Process an incoming Linear webhook payload.
         """
-        action = payload.get("action")
+        payload.get("action")
         data = payload.get("data", {})
         title = data.get("title", "")
         description = data.get("description", "")

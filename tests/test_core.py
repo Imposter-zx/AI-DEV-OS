@@ -28,9 +28,7 @@ async def test_orchestrator_initialization(mock_anthropic):
 
 @pytest.mark.asyncio
 async def test_workflow_state_logging():
-    state = WorkflowState(
-        id="test-1", phase=WorkflowPhase.BRAINSTORMING, user_request="test"
-    )
+    state = WorkflowState(id="test-1", phase=WorkflowPhase.BRAINSTORMING, user_request="test")
     state.add_log("Testing log")
     assert len(state.logs) == 1
     assert "Testing log" in state.logs[0]
@@ -38,9 +36,7 @@ async def test_workflow_state_logging():
 
 @pytest.mark.asyncio
 async def test_agent_config_defaults():
-    config = AgentConfig(
-        name="test-agent", role="code", sandbox_provider=SandboxProvider.MODAL
-    )
+    config = AgentConfig(name="test-agent", role="code", sandbox_provider=SandboxProvider.MODAL)
     assert "read_file" in config.tools
     assert "write_file" in config.tools
     assert config.max_tokens == 50000

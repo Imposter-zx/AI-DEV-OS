@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import time
 from typing import Any, Dict, List, Optional
@@ -18,9 +17,7 @@ class SlackIntegration:
 
     def __init__(self, token: str):
         if not token or token.strip() == "":
-            raise ValueError(
-                "CRITICAL SECURITY ERROR: Slack token is missing or empty."
-            )
+            raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
         self.token = token
         self.client = WebClient(token=token)
         self.integration_name = "slack"
@@ -36,7 +33,7 @@ class SlackIntegration:
         Send a message to Slack, optionally in a thread.
         """
         start_time = time.time()
-        kwargs = {"channel": channel}
+        kwargs: Dict[str, Any] = {"channel": channel}
         if text:
             kwargs["text"] = text
         if blocks:
@@ -49,9 +46,7 @@ class SlackIntegration:
             metrics_collector.record_success(
                 self.integration_name, "send_message", time.time() - start_time
             )
-            logger.info(
-                f"Slack message sent to {channel} in {time.time() - start_time:.2f}s"
-            )
+            logger.info(f"Slack message sent to {channel} in {time.time() - start_time:.2f}s")
             return {
                 "status": "success",
                 "ts": response["ts"],

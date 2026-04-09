@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 
 from ai_dev_os.skills import (
@@ -5,6 +7,11 @@ from ai_dev_os.skills import (
     DocumentationGenerationSkill,
     PerformanceOptimizationSkill,
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_env(monkeypatch):
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
 
 
 @pytest.mark.asyncio

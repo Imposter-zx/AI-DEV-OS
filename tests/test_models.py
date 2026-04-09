@@ -15,15 +15,17 @@ async def test_model_config():
 @pytest.mark.asyncio
 async def test_unsloth_trainer_mock(monkeypatch):
     import unittest.mock
+
     config = ModelConfig(model_name="test-model", task="train")
     trainer = UnslothTrainer(config)
 
-    # Since the real implementation requires a real CUDA GPU and unsloth, 
+    # Since the real implementation requires a real CUDA GPU and unsloth,
     # we explicitly mock it here for CI testing.
-    with unittest.mock.patch.object(UnslothTrainer, 'setup', return_value=True):
+    with unittest.mock.patch.object(UnslothTrainer, "setup", return_value=True):
         with unittest.mock.patch.object(
-            UnslothTrainer, 'train', 
-            return_value=(True, {"final_loss": 1.2, "vram_reduction_percent": 70.0})
+            UnslothTrainer,
+            "train",
+            return_value=(True, {"final_loss": 1.2, "vram_reduction_percent": 70.0}),
         ):
             success, metrics = await trainer.train()
             assert success is True

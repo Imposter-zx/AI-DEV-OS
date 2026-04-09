@@ -7,22 +7,20 @@ Coordinates Deep Agents, Superpowers skills, sandboxes, training, simulation, an
 import asyncio
 import json
 import logging
-from dataclasses import dataclass
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from abc import ABC, abstractmethod
-
 from ai_dev_os.sandbox import SandboxProvider
 from ai_dev_os.utils.context import ContextManager
 from ai_dev_os.utils.error_handling import with_retry
+from ai_dev_os.utils.snapshot import SnapshotManager
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -37,9 +35,7 @@ class WorkflowPhase(Enum):
 
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger(__name__)
 
 
@@ -58,6 +54,7 @@ class BaseLLM(ABC):
 class AnthropicLLM(BaseLLM):
     def __init__(self):
         import os
+
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -121,10 +118,10 @@ class AgentConfig:
     sandbox_provider: SandboxProvider
     max_tokens: int = 50000
     temperature: float = 0.7
-    tools: List[str] = None
+    tools: List[str] = field(default_factory=list)
 
     def __post_init__(self):
-        if self.tools is None:
+        if not self.tools:
             self.tools = self._default_tools()
 
     def _default_tools(self) -> List[str]:
@@ -146,23 +143,15 @@ class WorkflowState:
     user_request: str
     design_doc: Optional[str] = None
     implementation_plan: Optional[str] = None
-    subagent_configs: List[AgentConfig] = None
-    execution_results: Dict[str, Any] = None
+    subagent_configs: List[AgentConfig] = field(default_factory=list)
+    execution_results: Dict[str, Any] = field(default_factory=dict)
     context_usage: float = 0.0  # percentage
-    active_agents: List[str] = None
-    logs: List[str] = None
-    created_at: str = None
+    active_agents: List[str] = field(default_factory=list)
+    logs: List[str] = field(default_factory=list)
+    created_at: str = ""
 
     def __post_init__(self):
-        if self.subagent_configs is None:
-            self.subagent_configs = []
-        if self.execution_results is None:
-            self.execution_results = {}
-        if self.active_agents is None:
-            self.active_agents = []
-        if self.logs is None:
-            self.logs = []
-        if self.created_at is None:
+        if not self.created_at:
             self.created_at = datetime.utcnow().isoformat()
 
     def add_log(self, message: str):
@@ -226,9 +215,9 @@ Generate output for this skill:
         state.add_log(f"Executing skill: {self.name}")
 
         # Track input tokens
-        in_tokens = self.context_manager.count_tokens(
-            prompt
-        ) + self.context_manager.count_tokens(self.system_prompt)
+        in_tokens = self.context_manager.count_tokens(prompt) + self.context_manager.count_tokens(
+            self.system_prompt
+        )
 
         # Execute via agnostic LLM provider
         result, in_t, out_t = self.llm.generate(
@@ -244,17 +233,13 @@ Generate output for this skill:
         self.context_manager.track_usage(state.id, self.name, in_tokens + out_tokens)
 
         # Update state percentage (assuming 200k limit for Claude 3.5 Sonnet)
-        state.context_usage = self.context_manager.get_usage_percentage(
-            state.id, 200000
-        )
+        state.context_usage = self.context_manager.get_usage_percentage(state.id, 200000)
 
         # Save cache
         with open(cache_file, "w") as f:
             json.dump({"result": result}, f)
 
-        state.add_log(
-            f"Skill {self.name} completed, tokens: {in_tokens} in / {out_tokens} out"
-        )
+        state.add_log(f"Skill {self.name} completed, tokens: {in_tokens} in / {out_tokens} out")
 
         return result
 
@@ -266,9 +251,7 @@ class ClaudeHUDIntegration:
         self.status_file = Path.home() / ".ai-dev-os" / "hud_status.json"
         self.status_file.parent.mkdir(parents=True, exist_ok=True)
 
-    def update(
-        self, state: WorkflowState, context_usage: float, active_agents: List[str]
-    ):
+    def update(self, state: WorkflowState, context_usage: float, active_agents: List[str]):
         """Update HUD with current state."""
         status = {
             "timestamp": datetime.utcnow().isoformat(),
@@ -319,9 +302,7 @@ class SubagentOrchestrator:
             elif tool_name == "execute":
                 import subprocess
 
-                res = subprocess.run(
-                    args["command"], shell=True, capture_output=True, text=True
-                )
+                res = subprocess.run(args["command"], shell=True, capture_output=True, text=True)
                 return f"Exit: {res.returncode}\nOut: {res.stdout}\nErr: {res.stderr}"
             else:
                 return f"Tool {tool_name} not implemented."
@@ -363,8 +344,8 @@ Task:
         total_in, total_out = 0, 0
         final_result = ""
 
-        import re
         import json
+        import re
 
         for step in range(5):  # Max iterations
             text, in_t, out_t = self.llm.generate(
@@ -409,22 +390,16 @@ Task:
             final_result = text
 
         # Track usage
-        self.context_manager.track_usage(
-            "workflow-dummy", config.name, total_in + total_out
-        )
+        self.context_manager.track_usage("workflow-dummy", config.name, total_in + total_out)
 
-        logger.info(
-            f"Subagent {config.name} completed, tokens: {total_in} in / {total_out} out"
-        )
+        logger.info(f"Subagent {config.name} completed, tokens: {total_in} in / {total_out} out")
 
         return final_result
 
     async def orchestrate(self, state: WorkflowState) -> WorkflowState:
         """Orchestrate all subagents in parallel."""
 
-        state.add_log(
-            f"Starting parallel execution of {len(state.subagent_configs)} agents"
-        )
+        state.add_log(f"Starting parallel execution of {len(state.subagent_configs)} agents")
         state.phase = WorkflowPhase.EXECUTION
 
         # Update HUD
@@ -457,9 +432,7 @@ Task:
 
         return state
 
-    def _generate_task_description(
-        self, state: WorkflowState, config: AgentConfig
-    ) -> str:
+    def _generate_task_description(self, state: WorkflowState, config: AgentConfig) -> str:
         """Generate specific task description for an agent."""
 
         task_descriptions = {
@@ -497,7 +470,7 @@ Requirements:
         }
 
         return task_descriptions.get(
-            config.role, "Execute this task: " + state.implementation_plan
+            config.role, "Execute this task: " + (state.implementation_plan or "")
         )
 
 
@@ -515,6 +488,9 @@ class AIDevOSOrchestrator:
 
         # Context manager
         self.context_manager = ContextManager()
+
+        # Initialize Snapshot manager
+        self.snapshot_manager = SnapshotManager()
 
         # Initialize Superpowers skills
         self.skills = self._load_skills()
@@ -726,10 +702,7 @@ Output: A performance report with specific optimization recommendations.
         agents = []
 
         # Heuristic: detect what kind of task this is
-        if any(
-            word in request_lower
-            for word in ["code", "build", "feature", "fix", "test"]
-        ):
+        if any(word in request_lower for word in ["code", "build", "feature", "fix", "test"]):
             agents.append(
                 AgentConfig(
                     name="code-agent",
@@ -738,9 +711,7 @@ Output: A performance report with specific optimization recommendations.
                 )
             )
 
-        if any(
-            word in request_lower for word in ["train", "finetune", "model", "lora"]
-        ):
+        if any(word in request_lower for word in ["train", "finetune", "model", "lora"]):
             agents.append(
                 AgentConfig(
                     name="training-agent",
@@ -786,9 +757,7 @@ async def main():
     print("WORKFLOW SUMMARY")
     print("=" * 60)
     print(f"Workflow ID: {state.id}")
-    print(
-        f"Status: {'COMPLETED' if state.phase == WorkflowPhase.MERGE else 'IN PROGRESS'}"
-    )
+    print(f"Status: {'COMPLETED' if state.phase == WorkflowPhase.MERGE else 'IN PROGRESS'}")
     print(f"Total logs: {len(state.logs)}")
     print(f"Agents used: {len(state.subagent_configs)}")
 
