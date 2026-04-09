@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -118,10 +118,10 @@ class AgentConfig:
     sandbox_provider: SandboxProvider
     max_tokens: int = 50000
     temperature: float = 0.7
-    tools: List[str] = None
+    tools: List[str] = field(default_factory=list)
 
     def __post_init__(self):
-        if self.tools is None:
+        if not self.tools:
             self.tools = self._default_tools()
 
     def _default_tools(self) -> List[str]:
@@ -143,23 +143,15 @@ class WorkflowState:
     user_request: str
     design_doc: Optional[str] = None
     implementation_plan: Optional[str] = None
-    subagent_configs: List[AgentConfig] = None
-    execution_results: Dict[str, Any] = None
+    subagent_configs: List[AgentConfig] = field(default_factory=list)
+    execution_results: Dict[str, Any] = field(default_factory=dict)
     context_usage: float = 0.0  # percentage
-    active_agents: List[str] = None
-    logs: List[str] = None
-    created_at: str = None
+    active_agents: List[str] = field(default_factory=list)
+    logs: List[str] = field(default_factory=list)
+    created_at: str = ""
 
     def __post_init__(self):
-        if self.subagent_configs is None:
-            self.subagent_configs = []
-        if self.execution_results is None:
-            self.execution_results = {}
-        if self.active_agents is None:
-            self.active_agents = []
-        if self.logs is None:
-            self.logs = []
-        if self.created_at is None:
+        if not self.created_at:
             self.created_at = datetime.utcnow().isoformat()
 
     def add_log(self, message: str):
@@ -477,7 +469,7 @@ Requirements:
 """,
         }
 
-        return task_descriptions.get(config.role, "Execute this task: " + state.implementation_plan)
+        return task_descriptions.get(config.role, "Execute this task: " + (state.implementation_plan or ""))
 
 
 class AIDevOSOrchestrator:

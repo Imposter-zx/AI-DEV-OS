@@ -33,7 +33,7 @@ class SlackIntegration:
         Send a message to Slack, optionally in a thread.
         """
         start_time = time.time()
-        kwargs = {"channel": channel}
+        kwargs: Dict[str, Any] = {"channel": channel}
         if text:
             kwargs["text"] = text
         if blocks:

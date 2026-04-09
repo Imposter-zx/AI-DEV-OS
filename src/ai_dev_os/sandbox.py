@@ -43,8 +43,8 @@ class SandboxConfig:
     timeout_seconds: int = 3600
     gpu: bool = False
     gpu_type: Optional[str] = None  # "a100", "h100", etc.
-    env_vars: Dict[str, str] = None
-    mounts: Dict[str, str] = None  # local_path -> container_path
+    env_vars: Optional[Dict[str, str]] = None
+    mounts: Optional[Dict[str, str]] = None  # local_path -> container_path
 
     def __post_init__(self):
         if self.env_vars is None:
@@ -118,7 +118,7 @@ class ModalSandbox(Sandbox):
             self.status = SandboxStatus.READY
             self.add_log(f"Modal sandbox initialized: {self.id}")
 
-            return self.id
+            return str(self.id)
 
         except ImportError:
             logger.error("Modal not installed. Install with: pip install modal")
@@ -257,7 +257,7 @@ class DaytonaSandbox(Sandbox):
             self.id = await self.client.create_workspace(self.config.name)
             self.status = SandboxStatus.READY
             self.add_log(f"Daytona sandbox initialized: {self.id}")
-            return self.id
+            return str(self.id)
         except Exception as e:
             self.status = SandboxStatus.ERROR
             self.add_log(f"Initialization failed: {str(e)}")
@@ -267,7 +267,7 @@ class DaytonaSandbox(Sandbox):
         """Execute command in Daytona via API."""
         try:
             self.add_log(f"Executing in Daytona: {command}")
-            result = await self.client.execute_command(self.id, command)
+            result = await self.client.execute_command(str(self.id), command)
             return (result["exit_code"], result["stdout"], result["stderr"])
         except Exception as e:
             return (1, "", str(e))
@@ -295,7 +295,7 @@ class DaytonaSandbox(Sandbox):
         """Terminate Daytona sandbox."""
         try:
             self.add_log("Terminating Daytona workspace")
-            success = await self.client.delete_workspace(self.id)
+            success = await self.client.delete_workspace(str(self.id))
             if success:
                 self.status = SandboxStatus.TERMINATED
             return success
@@ -328,7 +328,7 @@ class DockerSandbox(Sandbox):
             self.status = SandboxStatus.READY
             self.add_log(f"Docker sandbox initialized: {self.id}")
 
-            return self.id
+            return str(self.id)
 
         except ImportError:
             logger.error("Docker SDK not installed. Install with: pip install docker")
@@ -419,7 +419,7 @@ class DockerSandbox(Sandbox):
 class SandboxFactory:
     """Factory for creating sandboxes."""
 
-    _providers = {
+    _providers: Dict[str, type] = {
         "modal": ModalSandbox,
         "daytona": DaytonaSandbox,
         "docker": DockerSandbox,
@@ -469,7 +469,7 @@ class SandboxManager:
 
         cfg = SandboxConfig(provider=p_val, name=name or f"sb-{int(time.time())}")
         sandbox = await SandboxFactory.create(cfg)
-        self.active_sandboxes[sandbox.id] = sandbox
+        self.active_sandboxes[str(sandbox.id)] = sandbox
         return sandbox
 
     async def execute_command(self, sandbox_env: Any, command: str) -> Dict[str, Any]:

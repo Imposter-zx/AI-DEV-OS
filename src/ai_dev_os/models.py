@@ -73,6 +73,7 @@ class UnslothTrainer:
                     dtype=None,
                     load_in_4bit=self.config.quantization.value == "int4",
                 )
+                return True
             except ImportError:
                 error_msg = "Unsloth is not installed. Real execution requires Unsloth and compatible CUDA hardware. Install with: pip install unsloth[cu121]"
                 logger.error(error_msg)
@@ -266,6 +267,8 @@ class BitNetInference:
         try:
             if not self.model:
                 await self.load()
+            if not self.model:
+                return False, ""
 
             logger.info(f"Running inference: {prompt[:50]}...")
 

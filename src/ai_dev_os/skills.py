@@ -47,7 +47,11 @@ class DebuggingSkill:
                 system="You are an expert Python debugger. Provide a concise JSON response with 'analysis' and 'suggested_fix' keys.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            result_text = response.content[0].text
+            content_block = response.content[0]
+            if hasattr(content_block, "text"):
+                result_text = content_block.text
+            else:
+                result_text = str(content_block)
             import json
 
             try:
@@ -107,7 +111,11 @@ class PerformanceOptimizationSkill:
                 system="You are a performance engineer. Return a JSON dict with a key 'optimizations' containing a list of strings detailing how to speed up the code.",
                 messages=[{"role": "user", "content": prompt}],
             )
-            result_text = response.content[0].text
+            content_block = response.content[0]
+            if hasattr(content_block, "text"):
+                result_text = content_block.text
+            else:
+                result_text = str(content_block)
             import json
 
             try:
