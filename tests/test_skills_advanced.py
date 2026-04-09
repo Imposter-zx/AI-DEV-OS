@@ -8,7 +8,7 @@ from ai_dev_os.core import AIDevOSOrchestrator, WorkflowPhase, WorkflowState
 @pytest.fixture
 def orchestrator():
     with (
-        patch("ai_dev_os.core.Anthropic"),
+        patch("anthropic.Anthropic"),
         patch("ai_dev_os.core.SnapshotManager"),
         patch("ai_dev_os.core.AIDevOSOrchestrator._load_agents_rules", return_value={}),
     ):

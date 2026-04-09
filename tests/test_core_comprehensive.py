@@ -136,7 +136,7 @@ class TestAgentConfig:
 
 
 class TestAIDevOSOrchestrator:
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_initialization(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator(sandbox_provider=SandboxProvider.DOCKER)
         assert orchestrator.sandbox_provider == SandboxProvider.DOCKER
@@ -144,35 +144,35 @@ class TestAIDevOSOrchestrator:
         assert "planning" in orchestrator.skills
         assert "code-review" in orchestrator.skills
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_determine_agents_code(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         agents = orchestrator._determine_agents("Build a new feature for auth")
         roles = [a.role for a in agents]
         assert "code" in roles
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_determine_agents_training(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         agents = orchestrator._determine_agents("Train a model on my dataset")
         roles = [a.role for a in agents]
         assert "training" in roles
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_determine_agents_simulation(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         agents = orchestrator._determine_agents("Run a robot simulation")
         roles = [a.role for a in agents]
         assert "simulation" in roles
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_determine_agents_default(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         agents = orchestrator._determine_agents("Something vague")
         assert len(agents) == 1
         assert agents[0].role == "code"
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_determine_agents_multi_role(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         agents = orchestrator._determine_agents("Build code and train a model")
@@ -180,7 +180,7 @@ class TestAIDevOSOrchestrator:
         assert "code" in roles
         assert "training" in roles
 
-    @patch("ai_dev_os.core.Anthropic")
+    @patch("anthropic.Anthropic")
     def test_skills_loaded(self, mock_anthropic):
         orchestrator = AIDevOSOrchestrator()
         assert len(orchestrator.skills) == 6

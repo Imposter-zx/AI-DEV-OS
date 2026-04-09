@@ -54,7 +54,6 @@ class BaseLLM(ABC):
 class AnthropicLLM(BaseLLM):
     def __init__(self):
         import os
-
         from anthropic import Anthropic
 
         api_key = os.getenv("ANTHROPIC_API_KEY")

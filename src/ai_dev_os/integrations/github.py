@@ -173,7 +173,6 @@ class GitHubIntegration:
 
     async def handle_webhook_comment(self, payload: dict) -> dict:
         """Process an incoming GitHub PR comment payload (webhook)."""
-        payload.get("action")
         comment = payload.get("comment", {}).get("body", "")
 
         if "@openswe" in comment:
@@ -189,15 +188,11 @@ class GitHubIntegration:
         total_requests = (
             self.branches_created + self.prs_created + self.comments_added + self.requests_failed
         )
-        success_rate = (
-            (
-                (self.branches_created + self.prs_created + self.comments_added)
-                / total_requests
-                * 100
-            )
-            if total_requests > 0
-            else 0.0
-        )
+        if total_requests > 0:
+            success_rate = ((self.branches_created + self.prs_created + self.comments_added) / total_requests) * 100.0
+        else:
+            success_rate = 0.0
+
         return {
             "branches_created": self.branches_created,
             "prs_created": self.prs_created,

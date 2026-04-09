@@ -156,7 +156,7 @@ class DocumentationGenerationSkill:
         prompt = f"Generate appropriate Python docstrings and markdown notes for this file: {file_path}\n\n{code_context}"
 
         try:
-            response = self.client.messages.create(
+            self.client.messages.create(
                 model="claude-3-5-sonnet-20240620",
                 max_tokens=2048,
                 system="Generate documentation. Return JSON with 'updated_files' as a list of strings representing the generated markdown layout.",
