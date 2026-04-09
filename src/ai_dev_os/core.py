@@ -13,6 +13,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+from ai_dev_os.utils.snapshot import SnapshotManager
+
 from abc import ABC, abstractmethod
 
 from ai_dev_os.sandbox import SandboxProvider
@@ -515,6 +517,9 @@ class AIDevOSOrchestrator:
 
         # Context manager
         self.context_manager = ContextManager()
+
+        # Initialize Snapshot manager
+        self.snapshot_manager = SnapshotManager()
 
         # Initialize Superpowers skills
         self.skills = self._load_skills()

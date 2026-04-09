@@ -1,7 +1,5 @@
-import asyncio
 import logging
 import time
-from typing import Any, Dict, Optional
 
 import httpx
 
@@ -121,7 +119,7 @@ class LinearIntegration:
         """
         Process an incoming Linear webhook payload.
         """
-        action = payload.get("action")
+        payload.get("action")
         data = payload.get("data", {})
         title = data.get("title", "")
         description = data.get("description", "")

@@ -23,8 +23,8 @@ async def test_create_issue_success(linear_integration):
 
         result = await linear_integration.create_issue("team-id", "title", "body")
 
-        assert result["id"] == "ISS-1"
-        assert result["url"] == "http://linear.app/1"
+        assert result["issue"]["id"] == "ISS-1"
+        assert result["issue"]["url"] == "http://linear.app/1"
 
 
 @pytest.mark.asyncio
@@ -36,7 +36,7 @@ async def test_update_issue_status(linear_integration):
         mock_client.return_value.__aenter__.return_value.post.return_value = mock_response
 
         success = await linear_integration.update_issue_status("ISS-1", "Done")
-        assert success is True
+        assert success["success"] is True
 
 
 @pytest.mark.asyncio

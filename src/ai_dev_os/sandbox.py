@@ -2,8 +2,6 @@
 Sandbox abstraction layer - supports Modal, Daytona, Runloop, Docker.
 """
 
-import asyncio
-import json
 import logging
 import time
 from abc import ABC, abstractmethod
@@ -67,7 +65,6 @@ class Sandbox(ABC):
     @abstractmethod
     async def initialize(self) -> str:
         """Initialize the sandbox. Returns sandbox ID."""
-        pass
 
     @abstractmethod
     async def execute(self, command: str, cwd: str = "/workspace") -> Tuple[int, str, str]:
@@ -75,22 +72,18 @@ class Sandbox(ABC):
         Execute a command in the sandbox.
         Returns: (exit_code, stdout, stderr)
         """
-        pass
 
     @abstractmethod
     async def upload_file(self, local_path: str, remote_path: str) -> bool:
         """Upload a file to the sandbox."""
-        pass
 
     @abstractmethod
     async def download_file(self, remote_path: str, local_path: str) -> bool:
         """Download a file from the sandbox."""
-        pass
 
     @abstractmethod
     async def terminate(self) -> bool:
         """Terminate the sandbox."""
-        pass
 
     def add_log(self, message: str):
         """Add a log entry."""

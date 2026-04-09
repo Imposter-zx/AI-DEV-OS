@@ -23,7 +23,7 @@ async def test_create_branch_success(github_integration):
 
     result = await github_integration.create_branch("user/repo", "new-branch")
 
-    assert result is True
+    assert result["status"] == "success"
     mock_repo.create_git_ref.assert_called_once_with(ref="refs/heads/new-branch", sha="123456")
 
 
@@ -52,7 +52,7 @@ async def test_add_comment_success(github_integration):
 
     result = await github_integration.add_comment("user/repo", 1, "test-comment")
 
-    assert result is True
+    assert result["status"] == "success"
     mock_issue.create_comment.assert_called_once_with("test-comment")
 
 

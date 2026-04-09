@@ -4,11 +4,10 @@ Newton Physics Simulation integration for AI Dev OS.
 Wraps Newton GPU-accelerated physics for robotics/simulation tasks.
 """
 
-import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional
+from typing import List
 
 logger = logging.getLogger(__name__)
 

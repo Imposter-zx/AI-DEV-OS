@@ -1,8 +1,8 @@
 import logging
 import time
-from typing import Any, Dict, Optional
+from typing import Dict
 
-from prometheus_client import Counter, Gauge, Histogram, Summary
+from prometheus_client import Counter, Gauge, Histogram
 
 logger = logging.getLogger(__name__)
 

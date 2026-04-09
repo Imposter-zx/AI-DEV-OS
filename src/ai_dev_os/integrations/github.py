@@ -4,10 +4,9 @@ GitHub integration for AI Dev OS.
 Handles repository operations, PR creation, and branch management using PyGithub.
 """
 
-import asyncio
 import logging
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -182,7 +181,7 @@ class GitHubIntegration:
 
     async def handle_webhook_comment(self, payload: dict) -> dict:
         """Process an incoming GitHub PR comment payload (webhook)."""
-        action = payload.get("action")
+        payload.get("action")
         comment = payload.get("comment", {}).get("body", "")
 
         if "@openswe" in comment:

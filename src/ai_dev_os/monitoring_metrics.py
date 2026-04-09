@@ -6,7 +6,6 @@ Tracks workflow execution, context usage, and agent performance.
 
 import logging
 import time
-from typing import Any, Dict
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ class MonitoredOrchestrator:
 
             return state
 
-        except Exception as e:
+        except Exception:
             if HAS_PROMETHEUS:
                 workflow_completed.labels(status="error").inc()
             raise
