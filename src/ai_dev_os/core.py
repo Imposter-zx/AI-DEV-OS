@@ -9,7 +9,7 @@ import json
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -32,11 +32,6 @@ class WorkflowPhase(Enum):
     EXECUTION = "execution"
     VALIDATION = "validation"
     MERGE = "merge"
-
-
-# Configure logging
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
-logger = logging.getLogger(__name__)
 
 
 class BaseLLM(ABC):
@@ -70,7 +65,7 @@ class AnthropicLLM(BaseLLM):
         temperature: float = 0.7,
     ) -> Tuple[str, int, int]:
         response = self.client.messages.create(
-            model="claude-3-5-sonnet-20240620",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=max_tokens,
             temperature=temperature,
             system=system,
@@ -152,11 +147,11 @@ class WorkflowState:
 
     def __post_init__(self):
         if not self.created_at:
-            self.created_at = datetime.utcnow().isoformat()
+            self.created_at = datetime.now(timezone.utc).isoformat()
 
     def add_log(self, message: str):
         """Add a log entry."""
-        self.logs.append(f"[{datetime.utcnow().isoformat()}] {message}")
+        self.logs.append(f"[{datetime.now(timezone.utc).isoformat()}] {message}")
         logger.info(message)
 
 
@@ -254,7 +249,7 @@ class ClaudeHUDIntegration:
     def update(self, state: WorkflowState, context_usage: float, active_agents: List[str]):
         """Update HUD with current state."""
         status = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "phase": state.phase.value,
             "context_usage": f"{context_usage:.1f}%",
             "active_agents": active_agents,
@@ -283,7 +278,6 @@ class SubagentOrchestrator:
         self.sandbox_provider = sandbox_provider
         self.context_manager = context_manager or ContextManager()
         self.llm = llm_provider or AnthropicLLM()
-        self.hud = ClaudeHUDIntegration()
         self.hud = ClaudeHUDIntegration()
 
     def _execute_tool(self, tool_name: str, args: Dict[str, Any]) -> str:

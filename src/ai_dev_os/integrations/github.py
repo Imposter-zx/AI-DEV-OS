@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional
 logger = logging.getLogger(__name__)
 
 try:
-    from github import Github, GithubException
+    from github import Auth, Github, GithubException
 
     HAS_GITHUB = True
 except ImportError:
@@ -28,7 +28,7 @@ class GitHubIntegration:
         if not token or token.strip() == "":
             raise ValueError("CRITICAL SECURITY ERROR: GitHub token is missing or empty.")
         self.token = token
-        self.client = Github(token) if HAS_GITHUB else None
+        self.client = Github(auth=Auth.Token(token)) if HAS_GITHUB else None
         # Metrics counters
         self.branches_created = 0
         self.prs_created = 0

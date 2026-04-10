@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -21,7 +21,7 @@ async def test_daytona_client_mock_mode():
 @pytest.mark.asyncio
 async def test_daytona_client_real_interaction():
     client = DaytonaClient(api_key="fake-key")
-    with patch("httpx.AsyncClient.post") as mock_post:
+    with patch("httpx.AsyncClient.post"):
         # Mock simple response
         ws_id = await client.create_workspace("real-unit-test")
         assert "daytona-" in ws_id
