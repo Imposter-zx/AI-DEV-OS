@@ -1,0 +1,51 @@
+> import logging
+> import os
+> from typing import Any, Dict, Optional
+  
+> import httpx
+  
+> logger = logging.getLogger(__name__)
+  
+  
+> class DaytonaClient:
+>     """
+>     Client for interacting with Daytona API (https://daytona.io).
+>     """
+  
+>     def __init__(self, api_key: Optional[str] = None, base_url: str = "https://api.daytona.io/v1"):
+>         self.api_key = api_key or os.getenv("DAYTONA_API_KEY")
+>         self.base_url = base_url
+>         if not self.api_key:
+>             logger.warning("DAYTONA_API_KEY is missing. Daytona sandbox will run in mock mode.")
+  
+>     async def create_workspace(self, name: str, image: str = "daytona/workspace:latest") -> str:
+>         """Create a new Daytona workspace."""
+>         if not self.api_key:
+>             return f"mock-workspace-{name}"
+  
+>         async with httpx.AsyncClient():
+              # Simulated Daytona interaction
+>             logger.info(f"Creating Daytona workspace: {name}")
+>             return f"daytona-{name}-id"
+  
+>     async def execute_command(self, workspace_id: str, command: str) -> Dict[str, Any]:
+>         """Execute a command in a Daytona workspace."""
+>         if not self.api_key:
+>             return {"exit_code": 0, "stdout": f"[mock] {command}", "stderr": ""}
+  
+!         logger.info(f"Executing in Daytona [{workspace_id}]: {command}")
+!         return {"exit_code": 0, "stdout": "Success", "stderr": ""}
+  
+>     async def delete_workspace(self, workspace_id: str) -> bool:
+>         """Delete a Daytona workspace."""
+!         if not self.api_key:
+!             return True
+!         logger.info(f"Deleting Daytona workspace: {workspace_id}")
+!         return True
+  
+>     async def setup_port_forward(self, workspace_id: str, port: int) -> str:
+>         """Set up port forwarding for a workspace."""
+>         if not self.api_key:
+>             return f"http://localhost:{port}"
+!         logger.info(f"Forwarding port {port} for workspace {workspace_id}")
+!         return f"https://{port}-{workspace_id}.daytona.app"

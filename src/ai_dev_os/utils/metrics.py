@@ -122,41 +122,45 @@ class IntegrationMetricsCollector:
         Get metrics for a specific integration or all integrations.
         """
         with self._lock:
-            if integration_name:
-                if integration_name not in self._metrics:
-                    return {}
+            return self._get_metrics_unlocked(integration_name)
 
-                metrics = self._metrics[integration_name].copy()
-                # Calculate derived metrics
-                total_ops = metrics["success_count"] + metrics["failure_count"]
-                metrics["total_operations"] = total_ops
-                metrics["success_rate"] = (
-                    (metrics["success_count"] / total_ops * 100) if total_ops > 0 else 0.0
-                )
-                metrics["average_latency"] = (
-                    (metrics["total_latency"] / total_ops) if total_ops > 0 else 0.0
-                )
-                metrics["uptime"] = time.time() - metrics["start_time"]
+    def _get_metrics_unlocked(self, integration_name: Optional[str] = None) -> Dict[str, Any]:
+        """Internal unlocked version of get_metrics to avoid deadlocks."""
+        if integration_name:
+            if integration_name not in self._metrics:
+                return {}
 
-                # Process operation metrics
-                if "operations" in metrics:
-                    for op_name, op_metrics in metrics["operations"].items():
-                        op_total = op_metrics["success_count"] + op_metrics["failure_count"]
-                        op_metrics["total_operations"] = op_total
-                        op_metrics["success_rate"] = (
-                            (op_metrics["success_count"] / op_total * 100) if op_total > 0 else 0.0
-                        )
-                        op_metrics["average_latency"] = (
-                            (op_metrics["total_latency"] / op_total) if op_total > 0 else 0.0
-                        )
+            metrics = self._metrics[integration_name].copy()
+            # Calculate derived metrics
+            total_ops = metrics["success_count"] + metrics["failure_count"]
+            metrics["total_operations"] = total_ops
+            metrics["success_rate"] = (
+                (metrics["success_count"] / total_ops * 100) if total_ops > 0 else 0.0
+            )
+            metrics["average_latency"] = (
+                (metrics["total_latency"] / total_ops) if total_ops > 0 else 0.0
+            )
+            metrics["uptime"] = time.time() - metrics["start_time"]
 
-                return metrics
-            else:
-                # Return all metrics
-                all_metrics = {}
-                for name, metrics in self._metrics.items():
-                    all_metrics[name] = self.get_metrics(name)
-                return all_metrics
+            # Process operation metrics
+            if "operations" in metrics:
+                for op_name, op_metrics in metrics["operations"].items():
+                    op_total = op_metrics["success_count"] + op_metrics["failure_count"]
+                    op_metrics["total_operations"] = op_total
+                    op_metrics["success_rate"] = (
+                        (op_metrics["success_count"] / op_total * 100) if op_total > 0 else 0.0
+                    )
+                    op_metrics["average_latency"] = (
+                        (op_metrics["total_latency"] / op_total) if op_total > 0 else 0.0
+                    )
+
+            return metrics
+        else:
+            # Return all metrics
+            all_metrics = {}
+            for name in self._metrics:
+                all_metrics[name] = self._get_metrics_unlocked(name)
+            return all_metrics
 
     def reset_metrics(self, integration_name: Optional[str] = None) -> None:
         """

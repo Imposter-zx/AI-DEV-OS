@@ -10,7 +10,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -37,7 +37,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -49,18 +49,18 @@ jobs:
       run: uv sync --all-groups
 
     - name: Check code style (Black)
-      run: uv run black --check src/ || true
+      run: uv run black --check src/
 
     - name: Sort imports (isort)
-      run: uv run isort --check src/ || true
+      run: uv run isort --check src/
 
     - name: Lint (flake8)
-      run: uv run flake8 src/ --max-line-length=100 --ignore=E501 || true
+      run: uv run flake8 src/ tests/
 
   type-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -72,12 +72,12 @@ jobs:
       run: uv sync --all-groups
 
     - name: Type checking (mypy)
-      run: uv run mypy src/ --ignore-missing-imports || true
+      run: uv run mypy src/ --ignore-missing-imports
 
   security:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Install uv
       uses: astral-sh/setup-uv@v5
@@ -89,4 +89,4 @@ jobs:
       run: uv sync --all-groups
 
     - name: Security check (bandit)
-      run: uv run bandit -r src/ -ll || true
+      run: uv run bandit -r src/ -ll

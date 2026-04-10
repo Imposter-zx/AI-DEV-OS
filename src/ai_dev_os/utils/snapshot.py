@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -24,7 +24,7 @@ class SnapshotManager:
         """
         Save a workflow state snapshot.
         """
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"wf_{workflow_id}_{phase}_{timestamp}.json"
         snapshot_path = self.base_dir / filename
 

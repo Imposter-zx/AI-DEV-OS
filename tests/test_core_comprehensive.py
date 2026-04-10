@@ -3,28 +3,13 @@ Comprehensive tests for core.py - AIDevOSOrchestrator and related classes.
 """
 
 import json
-import os
-import sys
-import tempfile
-from unittest.mock import MagicMock, patch
-
-import pytest
-
-try:
-    from unittest.mock import AsyncMock
-except ImportError:
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
+from unittest.mock import patch
 
 from ai_dev_os.core import (
     AgentConfig,
     AIDevOSOrchestrator,
     ClaudeHUDIntegration,
     SandboxProvider,
-    SubagentOrchestrator,
     SuperpowerSkill,
     WorkflowPhase,
     WorkflowState,

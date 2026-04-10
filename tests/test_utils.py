@@ -1,18 +1,6 @@
-import asyncio
-import os
-import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
-
-try:
-    from unittest.mock import AsyncMock
-except ImportError:
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
 
 from ai_dev_os.utils.error_handling import with_retry
 from ai_dev_os.utils.monitoring import setup_structured_logging
@@ -61,22 +49,5 @@ async def test_with_retry_all_failures():
 def test_setup_structured_logging():
     logger = setup_structured_logging()
     assert logger.level <= 20  # INFO or lower
-
-    try:
-        try:
-            from pythonjsonlogger.json import JsonFormatter
-        except ImportError:
-            from pythonjsonlogger import jsonlogger
-
-            JsonFormatter = jsonlogger.JsonFormatter
-        has_json = True
-    except ImportError:
-        has_json = False
-
-    if has_json:
-        # Check if any handler has a formatter
-        assert any(h.formatter is not None for h in logger.handlers)
-    else:
-        assert any(
-            isinstance(h.formatter, __import__("logging").Formatter) for h in logger.handlers
-        )
+    # Verify at least one handler has a formatter attached
+    assert any(h.formatter is not None for h in logger.handlers)
