@@ -1,9 +1,9 @@
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from ai_dev_os.core import AIDevOSOrchestrator, WorkflowPhase
+from ai_dev_os.core import AIDevOSOrchestrator
 
 
 @pytest.fixture
@@ -33,7 +33,7 @@ async def test_run_generates_snapshots(orchestrator):
     orchestrator.mock_llm.generate.return_value = ("mock result phase 1", 10, 10)
 
     with patch("builtins.input", return_value="yes"):
-        state = await orchestrator.run("test snapshot request")
+        await orchestrator.run("test snapshot request")
 
     assert orchestrator.snapshot_manager.save_snapshot.call_count >= 5
 

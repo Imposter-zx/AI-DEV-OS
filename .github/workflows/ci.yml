@@ -21,7 +21,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Lint with flake8
-        run: uv run flake8 src/ai_dev_os --max-line-length=100 --ignore=E501
+        run: uv run flake8 src/ tests/
       - name: Format check with black
         run: uv run black --check src/ai_dev_os
       - name: Import sort check with isort
@@ -29,4 +29,6 @@ jobs:
       - name: Type check with mypy
         run: uv run mypy src/ai_dev_os --ignore-missing-imports
       - name: Run tests
+        env:
+          ANTHROPIC_API_KEY: "dummy_key_for_ci_tests"
         run: uv run pytest tests/ -v --cov=src/ai_dev_os --cov-report=term-missing

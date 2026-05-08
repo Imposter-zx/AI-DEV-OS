@@ -2,7 +2,13 @@ import sys
 from dataclasses import dataclass
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
+# Mock heavy dependencies BEFORE importing sandbox (avoids E402 and import errors)
+sys.modules["docker"] = MagicMock()
+sys.modules["modal"] = MagicMock()
+
+import pytest  # noqa: E402
+
+from ai_dev_os.sandbox import SandboxManager, SandboxProvider  # noqa: E402
 
 
 @dataclass
@@ -10,15 +16,6 @@ class MockSandboxEnv:
     id: str
     provider: str
     status: str
-
-
-# Mock dependencies
-mock_docker = MagicMock()
-sys.modules["docker"] = mock_docker
-mock_modal = MagicMock()
-sys.modules["modal"] = mock_modal
-
-from ai_dev_os.sandbox import SandboxManager, SandboxProvider
 
 
 @pytest.fixture

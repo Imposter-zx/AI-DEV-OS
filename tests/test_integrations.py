@@ -1,19 +1,9 @@
-import os
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-try:
-    from unittest.mock import AsyncMock
-except ImportError:
-
-    class AsyncMock(MagicMock):
-        async def __call__(self, *args, **kwargs):
-            return super(AsyncMock, self).__call__(*args, **kwargs)
-
-
-# Mock HTTPX
+# Mock HTTPX — must happen before any integration imports
 sys.modules["httpx"] = MagicMock()
 
 # We will test the basic webhook classes that handle standard JSON requests
