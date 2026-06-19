@@ -2,12 +2,13 @@ import logging
 import time
 from typing import Any, Dict, List, Optional
 
-from slack_sdk import WebClient
-from slack_sdk.errors import SlackApiError
-
+from ai_dev_os.utils.circuit_breaker import breaker_registry
+from ai_dev_os.utils.health import create_integration_health_check, health
 from ai_dev_os.utils.metrics import metrics_collector
 
 logger = logging.getLogger(__name__)
+
+_slack_breaker = breaker_registry.get_or_create("slack", failure_threshold=5, recovery_timeout=30.0)
 
 
 class SlackIntegration:
@@ -19,8 +20,15 @@ class SlackIntegration:
         if not token or token.strip() == "":
             raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
         self.token = token
-        self.client = WebClient(token=token)
         self.integration_name = "slack"
+        try:
+            from slack_sdk import WebClient
+            self.client = WebClient(token=token)
+            self._slack_available = True
+        except ImportError:
+            logger.warning("slack-sdk not installed. Slack integration will be mocked.")
+            self.client = None
+            self._slack_available = False
 
     async def send_message(
         self,
@@ -41,6 +49,17 @@ class SlackIntegration:
         if thread_ts:
             kwargs["thread_ts"] = thread_ts
 
+        if not self._slack_available:
+            metrics_collector.record_success(
+                self.integration_name, "send_message", time.time() - start_time
+            )
+            return {
+                "status": "success",
+                "ts": "mocked",
+                "latency": time.time() - start_time,
+                "message": "Slack message sent (simulated - slack-sdk not installed)",
+            }
+
         try:
             response = self.client.chat_postMessage(**kwargs)  # type: ignore
             metrics_collector.record_success(
@@ -52,24 +71,23 @@ class SlackIntegration:
                 "ts": response["ts"],
                 "latency": time.time() - start_time,
             }
-        except SlackApiError as e:
-            metrics_collector.record_failure(
-                self.integration_name, "send_message", time.time() - start_time, str(e)
-            )
-            logger.error(f"Slack API error: {e.response['error']}")
-            return {
-                "status": "error",
-                "message": str(e),
-                "latency": time.time() - start_time,
-            }
         except Exception as e:
-            metrics_collector.record_failure(
-                self.integration_name, "send_message", time.time() - start_time, str(e)
-            )
-            logger.error(f"Unexpected error sending Slack message: {e}")
+            # Try to detect SlackApiError without importing it
+            error_str = str(e)
+            if "SlackApiError" in type(e).__name__:
+                error_detail = getattr(e, 'response', {}).get('error', str(e))
+                metrics_collector.record_failure(
+                    self.integration_name, "send_message", time.time() - start_time, error_str
+                )
+                logger.error(f"Slack API error: {error_detail}")
+            else:
+                metrics_collector.record_failure(
+                    self.integration_name, "send_message", time.time() - start_time, error_str
+                )
+                logger.error(f"Unexpected error sending Slack message: {e}")
             return {
                 "status": "error",
-                "message": str(e),
+                "message": error_str,
                 "latency": time.time() - start_time,
             }
 
@@ -97,3 +115,6 @@ class SlackIntegration:
                 "message_ts": payload.get("message", {}).get("ts"),
             }
         return {"status": "unknown_interaction"}
+
+
+health.register_check("slack", create_integration_health_check("slack"))

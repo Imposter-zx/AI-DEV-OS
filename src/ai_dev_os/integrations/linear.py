@@ -3,10 +3,14 @@ import time
 
 import httpx
 
+from ai_dev_os.utils.circuit_breaker import breaker_registry
 from ai_dev_os.utils.error_handling import with_retry
+from ai_dev_os.utils.health import create_integration_health_check, health
 from ai_dev_os.utils.metrics import metrics_collector
 
 logger = logging.getLogger(__name__)
+
+_linear_breaker = breaker_registry.get_or_create("linear", failure_threshold=3, recovery_timeout=30.0)
 
 
 class LinearIntegration:
@@ -128,3 +132,6 @@ class LinearIntegration:
             }
 
         return {"status": "ignored"}
+
+
+health.register_check("linear", create_integration_health_check("linear"))
