@@ -23,6 +23,7 @@ class SlackIntegration:
         self.integration_name = "slack"
         try:
             from slack_sdk import WebClient
+
             self.client = WebClient(token=token)
             self._slack_available = True
         except ImportError:
@@ -75,7 +76,7 @@ class SlackIntegration:
             # Try to detect SlackApiError without importing it
             error_str = str(e)
             if "SlackApiError" in type(e).__name__:
-                error_detail = getattr(e, 'response', {}).get('error', str(e))
+                error_detail = getattr(e, "response", {}).get("error", str(e))
                 metrics_collector.record_failure(
                     self.integration_name, "send_message", time.time() - start_time, error_str
                 )

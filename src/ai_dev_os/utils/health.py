@@ -75,9 +75,7 @@ class HealthStatus:
             },
             "details": results,
             "metrics_summary": {
-                integration: {
-                    k: v for k, v in data.items() if k != "operations"
-                }
+                integration: {k: v for k, v in data.items() if k != "operations"}
                 for integration, data in metrics_collector.get_metrics().items()
             },
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -89,6 +87,7 @@ health = HealthStatus()
 
 def create_integration_health_check(integration_name: str):
     """Create a health check function for an integration."""
+
     def check():
         metrics = metrics_collector.get_metrics(integration_name)
         if not metrics:
@@ -105,4 +104,5 @@ def create_integration_health_check(integration_name: str):
             "failure_rate": failure_rate,
             "average_latency": metrics.get("average_latency", 0),
         }
+
     return check

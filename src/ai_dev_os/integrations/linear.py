@@ -10,7 +10,9 @@ from ai_dev_os.utils.metrics import metrics_collector
 
 logger = logging.getLogger(__name__)
 
-_linear_breaker = breaker_registry.get_or_create("linear", failure_threshold=3, recovery_timeout=30.0)
+_linear_breaker = breaker_registry.get_or_create(
+    "linear", failure_threshold=3, recovery_timeout=30.0
+)
 
 
 class LinearIntegration:

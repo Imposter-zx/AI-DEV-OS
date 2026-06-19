@@ -13,7 +13,9 @@ from ai_dev_os.utils.health import create_integration_health_check, health
 
 logger = logging.getLogger(__name__)
 
-_github_breaker = breaker_registry.get_or_create("github", failure_threshold=5, recovery_timeout=30.0)
+_github_breaker = breaker_registry.get_or_create(
+    "github", failure_threshold=5, recovery_timeout=30.0
+)
 
 try:
     from github import Auth, Github, GithubException

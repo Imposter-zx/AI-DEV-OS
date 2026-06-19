@@ -20,7 +20,7 @@ class CircuitState(Enum):
 class CircuitBreaker:
     """
     Circuit breaker implementation for external API calls.
-    
+
     Tracks failure counts and opens the circuit when a threshold is exceeded,
     preventing further calls until a timeout period elapses.
     """
@@ -94,8 +94,7 @@ class CircuitBreaker:
         if self.failure_count >= self.failure_threshold:
             self.state = CircuitState.OPEN
             logger.warning(
-                f"Circuit breaker '{self.name}' opened after "
-                f"{self.failure_count} failures"
+                f"Circuit breaker '{self.name}' opened after " f"{self.failure_count} failures"
             )
 
     async def call_async(self, func: Callable, *args: Any, **kwargs: Any) -> Any:
@@ -160,6 +159,7 @@ class CircuitBreaker:
 
 class CircuitBreakerOpenError(Exception):
     """Raised when a circuit breaker is open and refuses a call."""
+
     pass
 
 
@@ -168,7 +168,7 @@ class CircuitBreakerRegistry:
     Registry for managing multiple circuit breakers.
     """
 
-    _instance: Optional['CircuitBreakerRegistry'] = None
+    _instance: Optional["CircuitBreakerRegistry"] = None
 
     def __new__(cls):
         if cls._instance is None:
@@ -188,10 +188,7 @@ class CircuitBreakerRegistry:
 
     def get_all_states(self) -> Dict[str, Dict[str, Any]]:
         """Get states of all circuit breakers."""
-        return {
-            name: breaker.get_state()
-            for name, breaker in self._breakers.items()
-        }
+        return {name: breaker.get_state() for name, breaker in self._breakers.items()}
 
     def reset_all(self):
         """Reset all circuit breakers."""
