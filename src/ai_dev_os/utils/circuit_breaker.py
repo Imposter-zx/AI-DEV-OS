@@ -169,6 +169,7 @@ class CircuitBreakerRegistry:
     """
 
     _instance: Optional["CircuitBreakerRegistry"] = None
+    _breakers: Dict[str, "CircuitBreaker"]
 
     def __new__(cls):
         if cls._instance is None:

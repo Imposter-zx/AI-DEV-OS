@@ -21,6 +21,8 @@ class SlackIntegration:
             raise ValueError("CRITICAL SECURITY ERROR: Slack token is missing or empty.")
         self.token = token
         self.integration_name = "slack"
+        self.client: Any = None
+        self._slack_available = False
         try:
             from slack_sdk import WebClient
 
@@ -28,8 +30,6 @@ class SlackIntegration:
             self._slack_available = True
         except ImportError:
             logger.warning("slack-sdk not installed. Slack integration will be mocked.")
-            self.client = None
-            self._slack_available = False
 
     async def send_message(
         self,
