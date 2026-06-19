@@ -9,11 +9,9 @@ from ai_dev_os.core import AIDevOSOrchestrator
 @pytest.fixture
 def orchestrator(tmp_path):
     # Completely isolate the home directory for the entire core module during testing
-    with (
-        patch("ai_dev_os.core.AnthropicLLM") as mock_llm_class,
-        patch("ai_dev_os.core.SnapshotManager") as mock_sm_class,
-        patch("ai_dev_os.core.Path.home", return_value=tmp_path),
-    ):
+    with patch("ai_dev_os.core.AnthropicLLM") as mock_llm_class, \
+         patch("ai_dev_os.core.SnapshotManager") as mock_sm_class, \
+         patch("ai_dev_os.core.Path.home", return_value=tmp_path):
 
         mock_llm = mock_llm_class.return_value
         mock_sm = mock_sm_class.return_value

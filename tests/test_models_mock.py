@@ -5,7 +5,6 @@ from ai_dev_os.models import (
     BitNetInference,
     ModelConfig,
     ModelManager,
-    QuantizationType,
     UnslothTrainer,
 )
 

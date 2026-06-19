@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -37,7 +37,7 @@ async def test_modal_sandbox_file_ops_mock():
         sandbox = ModalSandbox(config)
         await sandbox.initialize()
 
-        with patch.object(sandbox, "app") as mock_app:
+        with patch.object(sandbox, "app"):
             # We mock the app.run or EnableTest context
             with patch("modal.EnableTest"):
                 # Mock the write_remote_file.remote call

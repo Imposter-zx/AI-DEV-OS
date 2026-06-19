@@ -1,4 +1,8 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+try:
+    from unittest.mock import AsyncMock
+except ImportError:
+    from asyncmock import AsyncMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -19,7 +23,7 @@ def config():
 @pytest.mark.asyncio
 async def test_modal_sandbox_mock():
     # Mock 'modal' library
-    with patch("modal.App") as mock_app, patch("modal.Image") as mock_image:
+    with patch("modal.App"), patch("modal.Image"):
         config = SandboxConfig(provider="modal", name="test-modal")
         sandbox = ModalSandbox(config)
 
@@ -29,7 +33,7 @@ async def test_modal_sandbox_mock():
         assert sandbox_id is not None
 
         # Test execute (mocking the remote function call)
-        with patch.object(sandbox, "app") as mock_app_instance:
+        with patch.object(sandbox, "app"):
             # Modal execution is complex to mock fully, but we can verify it calls the right things
             # This is a bit shallow but hits the lines
             pass

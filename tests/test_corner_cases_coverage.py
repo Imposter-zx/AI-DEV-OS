@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -32,10 +32,8 @@ async def test_github_integration_errors():
         GitHubIntegration(token="")
 
     # Test GithubException coverage
-    with (
-        patch("ai_dev_os.integrations.github.HAS_GITHUB", True),
-        patch("ai_dev_os.integrations.github.Github") as mock_gh_class,
-    ):
+    with patch("ai_dev_os.integrations.github.HAS_GITHUB", True), \
+         patch("ai_dev_os.integrations.github.Github") as mock_gh_class:
 
         mock_client = mock_gh_class.return_value
         github = GitHubIntegration(token="fake")

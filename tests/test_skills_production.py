@@ -1,16 +1,15 @@
 import os
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-
-# Set a dummy API key to avoid initialization errors that might bypass mocks
-os.environ["ANTHROPIC_API_KEY"] = "sk-ant-api03-template-key-for-tests-only"
 
 from ai_dev_os.skills import (
     DebuggingSkill,
     DocumentationGenerationSkill,
     PerformanceOptimizationSkill,
 )
+
+os.environ["ANTHROPIC_API_KEY"] = "sk-ant-api03-template-key-for-tests-only"
 
 
 @pytest.mark.asyncio

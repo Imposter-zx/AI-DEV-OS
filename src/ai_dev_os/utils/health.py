@@ -5,7 +5,7 @@ Provides health status for all external service integrations.
 
 import logging
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from ai_dev_os.utils.metrics import metrics_collector
 

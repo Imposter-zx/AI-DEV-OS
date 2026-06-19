@@ -3,11 +3,6 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-try:
-    from unittest.mock import AsyncMock
-except ImportError:
-    from asyncmock import AsyncMock
-
 import pytest
 
 from ai_dev_os.utils.circuit_breaker import (

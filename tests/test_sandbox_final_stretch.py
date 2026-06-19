@@ -1,8 +1,8 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ai_dev_os.sandbox import DockerSandbox, SandboxConfig, SandboxFactory, SandboxStatus
+from ai_dev_os.sandbox import DockerSandbox, SandboxConfig, SandboxStatus
 
 
 @pytest.mark.asyncio

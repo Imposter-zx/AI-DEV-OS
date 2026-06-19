@@ -1,9 +1,9 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
 import ai_dev_os.models
-from ai_dev_os.models import FORCE_MOCK, ModelConfig, UnslothTrainer, inference, train_model
+from ai_dev_os.models import ModelConfig, UnslothTrainer, inference, train_model
 
 
 @pytest.fixture(autouse=True)

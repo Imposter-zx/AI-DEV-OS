@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -7,7 +7,7 @@ from ai_dev_os.integrations.github import GitHubIntegration
 
 @pytest.fixture
 def github():
-    with patch("ai_dev_os.integrations.github.Github") as mock_gh:
+    with patch("ai_dev_os.integrations.github.Github"):
         return GitHubIntegration(token="fake-token")
 
 
