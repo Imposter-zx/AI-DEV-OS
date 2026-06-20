@@ -195,7 +195,7 @@ Generate output for this skill:
         cache_dir = Path.home() / ".ai-dev-os" / "cache"
         cache_dir.mkdir(parents=True, exist_ok=True)
 
-        prompt_hash = hashlib.md5(prompt.encode("utf-8")).hexdigest()
+        prompt_hash = hashlib.md5(prompt.encode("utf-8")).hexdigest()  # nosec B324 - used for caching, not security
         cache_file = cache_dir / f"{self.name}_{prompt_hash}.json"
 
         if cache_file.exists():
@@ -296,7 +296,7 @@ class SubagentOrchestrator:
             elif tool_name == "execute":
                 import subprocess
 
-                res = subprocess.run(args["command"], shell=True, capture_output=True, text=True)
+                res = subprocess.run(args["command"], shell=True, capture_output=True, text=True)  # nosec B602 - intentional tool feature
                 return f"Exit: {res.returncode}\nOut: {res.stdout}\nErr: {res.stderr}"
             else:
                 return f"Tool {tool_name} not implemented."

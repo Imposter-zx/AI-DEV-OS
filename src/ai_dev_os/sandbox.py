@@ -141,7 +141,7 @@ class ModalSandbox(Sandbox):
                 # Ensure workspace exists
                 os.makedirs(work_dir, exist_ok=True)
 
-                result = subprocess.run(
+                result = subprocess.run(  # nosec B602 - intentional sandbox execution
                     cmd, shell=True, cwd=work_dir, capture_output=True, text=True
                 )
                 return result.returncode, result.stdout, result.stderr
