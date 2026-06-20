@@ -136,7 +136,7 @@ class TestCircuitBreaker:
         with pytest.raises(CircuitBreakerOpenError):
             cb.call(lambda: "should not reach")
 
-    def test_half_open_recovers(self, mocker):
+    def test_half_open_recovers(self):
         cb = CircuitBreaker(name="test", failure_threshold=1, recovery_timeout=10)
 
         try:
@@ -146,11 +146,10 @@ class TestCircuitBreaker:
 
         cb.last_failure_time = 100.0
 
-        mocker.patch("ai_dev_os.utils.circuit_breaker.time.time", return_value=120.0)
-
-        result = cb.call(lambda: "recovered")
-        assert result == "recovered"
-        assert cb.state == CircuitState.CLOSED
+        with patch("ai_dev_os.utils.circuit_breaker.time.time", return_value=120.0):
+            result = cb.call(lambda: "recovered")
+            assert result == "recovered"
+            assert cb.state == CircuitState.CLOSED
 
     def test_reset(self):
         cb = CircuitBreaker(name="test", failure_threshold=1, recovery_timeout=60)
@@ -170,7 +169,7 @@ class TestCircuitBreaker:
         assert state["name"] == "test"
         assert state["state"] == "closed"
 
-    def test_half_open_recovers_then_fails_again(self, mocker):
+    def test_half_open_recovers_then_fails_again(self):
         cb = CircuitBreaker(
             name="test", failure_threshold=1, recovery_timeout=10, half_open_max_calls=3
         )
@@ -181,18 +180,17 @@ class TestCircuitBreaker:
             pass
 
         cb.last_failure_time = 100.0
-        mocker.patch("ai_dev_os.utils.circuit_breaker.time.time", return_value=120.0)
+        with patch("ai_dev_os.utils.circuit_breaker.time.time", return_value=120.0):
+            result = cb.call(lambda: "ok1")
+            assert result == "ok1"
+            assert cb.state == CircuitState.CLOSED
 
-        result = cb.call(lambda: "ok1")
-        assert result == "ok1"
-        assert cb.state == CircuitState.CLOSED
+            try:
+                cb.call(lambda: (_ for _ in ()).throw(ValueError("fail2")))
+            except ValueError:
+                pass
 
-        try:
-            cb.call(lambda: (_ for _ in ()).throw(ValueError("fail2")))
-        except ValueError:
-            pass
-
-        assert cb.state == CircuitState.OPEN
+            assert cb.state == CircuitState.OPEN
 
     def test_async_call(self):
         cb = CircuitBreaker(name="test", failure_threshold=2, recovery_timeout=60)
@@ -227,8 +225,8 @@ class TestCircuitBreaker:
 
     def test_registry_get_or_create(self):
         registry = CircuitBreakerRegistry()
-        cb1 = registry.get_or_create("slack", failure_threshold=3)
-        cb2 = registry.get_or_create("slack", failure_threshold=5)
+        cb1 = registry.get_or_create("test_get_or_create", failure_threshold=3)
+        cb2 = registry.get_or_create("test_get_or_create", failure_threshold=5)
         assert cb1 is cb2
         assert cb1.failure_threshold == 3
 
@@ -305,7 +303,7 @@ class TestHealthStatus:
         summary = h.get_summary()
         assert summary["checks"]["unhealthy"] >= 1
 
-    def test_create_integration_health_check(self, mocker):
+    def test_create_integration_health_check(self):
         mock_metrics = {
             "total_calls": 10,
             "success_count": 9,
@@ -314,15 +312,14 @@ class TestHealthStatus:
             "average_latency": 0.5,
         }
 
-        mocker.patch(
+        with patch(
             "ai_dev_os.utils.metrics.IntegrationMetricsCollector.get_metrics",
             return_value=mock_metrics,
-        )
-
-        check_fn = create_integration_health_check("slack")
-        result = check_fn()
-        assert result["healthy"] is True
-        assert result["total_calls"] == 10
+        ):
+            check_fn = create_integration_health_check("slack")
+            result = check_fn()
+            assert result["healthy"] is True
+            assert result["total_calls"] == 10
 
 
 # =============================================================================
@@ -338,7 +335,7 @@ class TestSlackIntegration:
         return SlackIntegration(token="xoxb-fake-token")
 
     @pytest.mark.asyncio
-    async def test_send_message_with_text(self, integration, mocker):
+    async def test_send_message_with_text(self, integration):
         integration._slack_available = True
         mock_fn = MagicMock(return_value={"ts": "12345.67890"})
         integration.client = MagicMock()
@@ -350,7 +347,7 @@ class TestSlackIntegration:
         assert "latency" in result
 
     @pytest.mark.asyncio
-    async def test_send_message_with_blocks(self, integration, mocker):
+    async def test_send_message_with_blocks(self, integration):
         integration._slack_available = True
         mock_fn = MagicMock(return_value={"ts": "12345.67890"})
         integration.client = MagicMock()
@@ -362,7 +359,7 @@ class TestSlackIntegration:
         assert result["ts"] == "12345.67890"
 
     @pytest.mark.asyncio
-    async def test_send_message_in_thread(self, integration, mocker):
+    async def test_send_message_in_thread(self, integration):
         integration._slack_available = True
         mock_fn = MagicMock(return_value={"ts": "12345.67890"})
         integration.client = MagicMock()
@@ -374,7 +371,7 @@ class TestSlackIntegration:
         assert result["status"] == "success"
 
     @pytest.mark.asyncio
-    async def test_send_message_error(self, integration, mocker):
+    async def test_send_message_error(self, integration):
         integration._slack_available = True
         mock_fn = MagicMock(side_effect=Exception("Network error"))
         integration.client = MagicMock()
@@ -385,7 +382,7 @@ class TestSlackIntegration:
         assert "latency" in result
 
     @pytest.mark.asyncio
-    async def test_send_message_simulated(self, integration, mocker):
+    async def test_send_message_simulated(self, integration):
         integration._slack_available = False
         result = await integration.send_message(channel="#test", text="Hello")
         assert result["status"] == "success"
@@ -447,7 +444,7 @@ class TestLinearIntegration:
         return LinearIntegration(api_key="lin-api-fake-key")
 
     @pytest.mark.asyncio
-    async def test_create_issue(self, integration, mocker):
+    async def test_create_issue(self, integration):
         async def mock_post(*args, **kwargs):
             mock = MagicMock()
             mock.status_code = 200
@@ -461,52 +458,48 @@ class TestLinearIntegration:
             }
             return mock
 
-        mocker.patch("httpx.AsyncClient.post", mock_post)
-
-        result = await integration.create_issue(
-            team_id="team-1", title="Test Issue", description="Desc"
-        )
-        assert "issue" in result
-        assert result["issue"]["id"] == "lin-1"
-        assert "latency" in result
+        with patch("httpx.AsyncClient.post", mock_post):
+            result = await integration.create_issue(
+                team_id="team-1", title="Test Issue", description="Desc"
+            )
+            assert "issue" in result
+            assert result["issue"]["id"] == "lin-1"
+            assert "latency" in result
 
     @pytest.mark.asyncio
-    async def test_create_issue_failure(self, integration, mocker):
+    async def test_create_issue_failure(self, integration):
         async def mock_fail(*args, **kwargs):
             raise Exception("API error")
 
-        mocker.patch("httpx.AsyncClient.post", mock_fail)
-
-        result = await integration.create_issue(
-            team_id="team-1", title="Test Issue", description="Desc"
-        )
-        assert "error" in result
-        assert "latency" in result
+        with patch("httpx.AsyncClient.post", mock_fail):
+            result = await integration.create_issue(
+                team_id="team-1", title="Test Issue", description="Desc"
+            )
+            assert "error" in result
+            assert "latency" in result
 
     @pytest.mark.asyncio
-    async def test_update_issue_status(self, integration, mocker):
+    async def test_update_issue_status(self, integration):
         async def mock_post(*args, **kwargs):
             mock = MagicMock()
             mock.status_code = 200
             mock.json.return_value = {"data": {"issueUpdate": {"success": True}}}
             return mock
 
-        mocker.patch("httpx.AsyncClient.post", mock_post)
-
-        result = await integration.update_issue_status(issue_id="lin-1", status="Done")
-        assert result["success"] is True
-        assert "latency" in result
+        with patch("httpx.AsyncClient.post", mock_post):
+            result = await integration.update_issue_status(issue_id="lin-1", status="Done")
+            assert result["success"] is True
+            assert "latency" in result
 
     @pytest.mark.asyncio
-    async def test_update_issue_status_failure(self, integration, mocker):
+    async def test_update_issue_status_failure(self, integration):
         async def mock_fail(*args, **kwargs):
             raise Exception("API error")
 
-        mocker.patch("httpx.AsyncClient.post", mock_fail)
-
-        result = await integration.update_issue_status(issue_id="lin-1", status="Done")
-        assert result["success"] is False
-        assert "error" in result
+        with patch("httpx.AsyncClient.post", mock_fail):
+            result = await integration.update_issue_status(issue_id="lin-1", status="Done")
+            assert result["success"] is False
+            assert "error" in result
 
     @pytest.mark.asyncio
     async def test_handle_issue_triggers_on_mention(self, integration):

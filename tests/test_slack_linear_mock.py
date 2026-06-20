@@ -8,7 +8,7 @@ from ai_dev_os.integrations.slack import SlackIntegration
 
 @pytest.fixture
 def slack():
-    with patch("ai_dev_os.integrations.slack.WebClient"):
+    with patch("slack_sdk.WebClient"):
         return SlackIntegration(token="fake-token")
 
 

@@ -7,7 +7,7 @@ from ai_dev_os.integrations.slack import SlackIntegration
 
 @pytest.fixture
 def slack_integration():
-    with patch("ai_dev_os.integrations.slack.WebClient") as mock_client:
+    with patch("slack_sdk.WebClient") as mock_client:
         integration = SlackIntegration(token="xoxb-fake")
         integration.mock_client = mock_client.return_value
         return integration
